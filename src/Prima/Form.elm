@@ -17,6 +17,13 @@ module Prima.Form
 @docs FormField
 @docs FormFieldConfig
 @docs Validation
+@docs TextConfig
+@docs TextareaConfig
+@docs RadioConfig
+@docs CheckboxConfig
+@docs SelectConfig
+@docs DatepickerConfig
+@docs AutocompleteConfig
 @docs autocompleteConfig
 @docs checkboxConfig
 @docs datepickerConfig
@@ -51,10 +58,16 @@ import Html.Events
 import Regex
 
 
+{-| Defines a Field component for a generic form.
+Opaque implementation.
+-}
 type FormField model msg
     = FormField (FormFieldConfig model msg)
 
 
+{-| Defines a configuration for a Field component.
+Opaque implementation.
+-}
 type FormFieldConfig model msg
     = FormFieldTextConfig (TextConfig model msg) (List (Validation model))
     | FormFieldTextareaConfig (TextareaConfig model msg) (List (Validation model))
@@ -65,6 +78,8 @@ type FormFieldConfig model msg
     | FormFieldAutocompleteConfig (AutocompleteConfig model msg) (List (Validation model))
 
 
+{-| Input Text configuration options.
+-}
 type alias TextConfig model msg =
     { slug : String
     , label : String
@@ -75,6 +90,8 @@ type alias TextConfig model msg =
     }
 
 
+{-| Textarea configuration options.
+-}
 type alias TextareaConfig model msg =
     { slug : String
     , label : String
@@ -85,6 +102,8 @@ type alias TextareaConfig model msg =
     }
 
 
+{-| Input Radio configuration options.
+-}
 type alias RadioConfig model msg =
     { slug : String
     , label : String
@@ -96,6 +115,8 @@ type alias RadioConfig model msg =
     }
 
 
+{-| Input Checkbox configuration options.
+-}
 type alias CheckboxConfig model msg =
     { slug : String
     , label : String
@@ -106,6 +127,8 @@ type alias CheckboxConfig model msg =
     }
 
 
+{-| Select configuration options.
+-}
 type alias SelectConfig model msg =
     { slug : String
     , label : String
@@ -118,6 +141,8 @@ type alias SelectConfig model msg =
     }
 
 
+{-| Datepicker configuration options.
+-}
 type alias DatepickerConfig model msg =
     { slug : String
     , label : String
@@ -129,6 +154,8 @@ type alias DatepickerConfig model msg =
     }
 
 
+{-| Autocomplete configuration options.
+-}
 type alias AutocompleteConfig model msg =
     { slug : String
     , label : String
