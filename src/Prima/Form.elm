@@ -13,20 +13,18 @@ module Prima.Form
         , textConfig
         )
 
-{-
-   Components for building a form.
-
-   @docs FormField
-   @docs FormFieldConfig
-   @docs Validation
-   @docs autocompleteConfig
-   @docs checkboxConfig
-   @docs datepickerConfig
-   @docs radioConfig
-   @docs selectConfig
-   @docs textConfig
-   @docs isValid
-   @docs render
+{-| Components for building a form.
+@docs FormField
+@docs FormFieldConfig
+@docs Validation
+@docs autocompleteConfig
+@docs checkboxConfig
+@docs datepickerConfig
+@docs radioConfig
+@docs selectConfig
+@docs textConfig
+@docs isValid
+@docs render
 -}
 
 import Date exposing (Date)
@@ -144,89 +142,57 @@ type alias AutocompleteConfig model msg =
     }
 
 
-
-{-
-   Input Text configuration method.
+{-| Input Text configuration method.
 -}
-
-
 textConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List (Validation model) -> FormField model msg
 textConfig slug label isDisabled customAttributes reader tagger validations =
     FormField <| FormFieldTextConfig (TextConfig slug label isDisabled customAttributes reader tagger) validations
 
 
-
-{-
-   Textarea configuration method.
+{-| Textarea configuration method.
 -}
-
-
 textareaConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List (Validation model) -> FormField model msg
 textareaConfig slug label isDisabled customAttributes reader tagger validations =
     FormField <| FormFieldTextareaConfig (TextareaConfig slug label isDisabled customAttributes reader tagger) validations
 
 
-
-{-
-   Input Radio configuration method.
+{-| Input Radio configuration method.
 -}
-
-
 radioConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List ( String, String ) -> List (Validation model) -> FormField model msg
 radioConfig slug label isDisabled customAttributes reader tagger options validations =
     FormField <| FormFieldRadioConfig (RadioConfig slug label isDisabled customAttributes reader tagger options) validations
 
 
-
-{-
-   Checkbox configuration method.
+{-| Checkbox configuration method.
 -}
-
-
 checkboxConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> List (Validation model) -> FormField model msg
 checkboxConfig slug label isDisabled customAttributes reader tagger validations =
     FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label isDisabled customAttributes reader tagger) validations
 
 
-
-{-
-   Select configuration method.
+{-| Select configuration method.
 -}
-
-
 selectConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List ( String, String ) -> Bool -> List (Validation model) -> FormField model msg
 selectConfig slug label isDisabled customAttributes reader tagger options showEmptyOption validations =
     FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled customAttributes reader tagger options showEmptyOption) validations
 
 
-
-{-
-   Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
+{-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
 -}
-
-
 datepickerConfig : String -> String -> Bool -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker -> DatePicker.Settings -> List (Validation model) -> FormField model msg
 datepickerConfig slug label isDisabled reader tagger datepicker settings validations =
     FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label isDisabled reader tagger datepicker settings) validations
 
 
-
-{-
-   Autocomplete configuration method.
+{-| Autocomplete configuration method.
 -}
-
-
 autocompleteConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> List ( String, String ) -> List (Validation model) -> FormField model msg
 autocompleteConfig slug label isDisabled customAttributes filterReader choiceReader filterTagger choiceTagger options validations =
     FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled customAttributes filterReader choiceReader filterTagger choiceTagger options) validations
 
 
-
-{-
-   The only available method to Render a component.
+{-| The only available method to Render a component.
 -}
-
-
 render : model -> FormField model msg -> Html msg
 render model (FormField opaqueConfig) =
     case opaqueConfig of
@@ -498,12 +464,8 @@ type Validation model
     | Custom (model -> Bool)
 
 
-
-{-
-   Validate a FormField.
+{-| Validate a FormField.
 -}
-
-
 isValid : model -> FormFieldConfig model msg -> Bool
 isValid model opaqueConfig =
     let
