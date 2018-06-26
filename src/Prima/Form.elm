@@ -13,6 +13,22 @@ module Prima.Form
         , textConfig
         )
 
+{-
+   Components for building a form.
+
+   @docs FormField
+   @docs FormFieldConfig
+   @docs Validation
+   @docs autocompleteConfig
+   @docs checkboxConfig
+   @docs datepickerConfig
+   @docs radioConfig
+   @docs selectConfig
+   @docs textConfig
+   @docs isValid
+   @docs render
+-}
+
 import Date exposing (Date)
 import DatePicker exposing (..)
 import Html exposing (..)
@@ -35,23 +51,6 @@ import Html.Events
         , onInput
         )
 import Regex
-
-
-{-
-   Components for building a form.
-
-   @docs FormField
-   @docs FormFieldConfig
-   @docs Validation
-   @docs autocompleteConfig
-   @docs checkboxConfig
-   @docs datepickerConfig
-   @docs radioConfig
-   @docs selectConfig
-   @docs textConfig
-   @docs isValid
-   @docs render
--}
 
 
 type FormField model msg
