@@ -471,6 +471,8 @@ renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) ( opti
         ]
 
 
+{-| Validation rules for a FormField.
+-}
 type Validation model
     = NotEmpty
     | Expression Regex.Regex
