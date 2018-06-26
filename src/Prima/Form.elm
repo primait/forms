@@ -17,13 +17,6 @@ module Prima.Form
 @docs FormField
 @docs FormFieldConfig
 @docs Validation
-@docs TextConfig
-@docs TextareaConfig
-@docs RadioConfig
-@docs CheckboxConfig
-@docs SelectConfig
-@docs DatepickerConfig
-@docs AutocompleteConfig
 @docs autocompleteConfig
 @docs checkboxConfig
 @docs datepickerConfig
