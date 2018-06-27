@@ -227,14 +227,14 @@ render model (FormField opaqueConfig) =
 wrapper : List (Html msg) -> Html msg
 wrapper =
     div
-        [ class "form__field" ]
+        [ class "a-form__field" ]
 
 
 renderLabel : String -> String -> Html msg
 renderLabel slug label =
     Html.label
         [ for slug
-        , class "form__field__label"
+        , class "a-form__field__label"
         ]
         [ text label
         ]
@@ -259,7 +259,7 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes }
              , name slug
              , disabled isDisabled
              , classList
-                [ ( "form__field__input", True )
+                [ ( "a-form__field__input", True )
                 , ( "is-valid", valid )
                 , ( "is-invalid", not valid && not pristine )
                 , ( "is-pristine", pristine )
@@ -290,7 +290,7 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
              , name slug
              , disabled isDisabled
              , classList
-                [ ( "form__field__textarea", True )
+                [ ( "a-form__field__textarea", True )
                 , ( "is-valid", valid )
                 , ( "is-invalid", not valid && not pristine )
                 , ( "is-pristine", pristine )
@@ -328,7 +328,7 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
          , (checked << (==) optionValue << Maybe.withDefault "" << reader) model
          , disabled isDisabled
          , classList
-            [ ( "form__field__radio", True )
+            [ ( "a-form__field__radio", True )
             ]
          ]
             ++ customAttributes
@@ -336,7 +336,7 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
         []
     , Html.label
         [ for optionSlug
-        , class "form__field__label form__field__label--option"
+        , class "a-form__field__label form__field__label--option"
         ]
         [ text optionName
         ]
@@ -355,7 +355,7 @@ renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes
              , name slug
              , disabled isDisabled
              , classList
-                [ ( "form__field__checkbox", True )
+                [ ( "a-form__field__checkbox", True )
                 ]
              ]
                 ++ customAttributes
@@ -387,7 +387,7 @@ renderSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, 
              , name slug
              , disabled isDisabled
              , classList
-                [ ( "form__field__select", True )
+                [ ( "a-form__field__select", True )
                 , ( "is-valid", valid )
                 , ( "is-invalid", not valid && not pristine )
                 , ( "is-pristine", pristine )
@@ -434,8 +434,8 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
              , name slug
              , disabled isDisabled
              , classList
-                [ ( "form__field__input", True )
-                , ( "form__field__input--autocomplete", True )
+                [ ( "a-form__field__input", True )
+                , ( "a-form__field__input--autocomplete", True )
                 , ( "is-valid", valid )
                 , ( "is-invalid", not valid && not pristine )
                 , ( "is-pristine", pristine )
@@ -446,7 +446,7 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
             )
             []
         , ul
-            [ class "form__field__autocomplete" ]
+            [ class "a-form__field__autocomplete" ]
             (List.map (renderAutocompleteOption model config) options)
         ]
 
@@ -455,7 +455,7 @@ renderAutocompleteOption : model -> AutocompleteConfig model msg -> ( String, St
 renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) ( optionName, optionValue ) =
     li
         [ classList
-            [ ( "form__field__autocomplete__item", True )
+            [ ( "a-form__field__autocomplete__item", True )
             , ( "is-selected", ((==) optionValue << Maybe.withDefault "" << choiceReader) model )
             ]
         , (onClick << choiceTagger << normalizeInput) optionValue
