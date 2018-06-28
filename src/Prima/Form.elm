@@ -336,7 +336,7 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
         []
     , Html.label
         [ for optionSlug
-        , class "a-form__field__label form__field__label--option"
+        , class "a-form__field__label a-form__field__label--option"
         ]
         [ text optionName
         ]
