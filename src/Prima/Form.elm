@@ -361,6 +361,12 @@ renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes
                 ++ customAttributes
             )
             []
+        , Html.label
+            [ for slug
+            , class "a-form__field__label a-form__field__label--option"
+            ]
+            [ text " "
+            ]
         ]
 
 
