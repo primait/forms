@@ -49,6 +49,7 @@ import Html.Events
         , onInput
         )
 import Regex
+import Tuple
 
 
 {-| Defines a Field component for a generic form.
@@ -387,6 +388,7 @@ renderSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, 
     in
     wrapper
         [ renderLabel slug label
+        , renderCustomSelect model config validations
         , Html.select
             ([ onInput (tagger << normalizeInput)
              , id slug
@@ -413,6 +415,61 @@ renderSelectOption model { reader, tagger, slug, label } ( optionName, optionVal
         , (selected << (==) optionValue << Maybe.withDefault "" << reader) model
         ]
         [ text optionName
+        ]
+
+
+renderCustomSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
+renderCustomSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, customAttributes } as config) validations =
+    let
+        options =
+            if showEmptyOption then
+                ( "", "" ) :: config.options
+            else
+                config.options
+
+        valid =
+            isValid model (FormFieldSelectConfig config validations)
+
+        pristine =
+            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty ])
+
+        currentValue =
+            options
+                |> List.filter (\( optionName, optionValue ) -> ((==) optionValue << Maybe.withDefault "" << reader) model)
+                |> List.map Tuple.first
+                |> List.head
+                |> Maybe.withDefault ""
+    in
+    div
+        [ classList
+            [ ( "a-form__field__customSelect", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid && not pristine )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            , ( "is-disabled", isDisabled )
+            ]
+        ]
+        [ span
+            [ class "a-form__field__customSelect__status" ]
+            [ text currentValue
+            ]
+        , ul
+            [ class "a-form__field__customSelect__list" ]
+            (List.map (renderCustomSelectOption model config) options)
+        ]
+
+
+renderCustomSelectOption : model -> SelectConfig model msg -> ( String, String ) -> Html msg
+renderCustomSelectOption model { reader, tagger, slug, label } ( optionName, optionValue ) =
+    li
+        [ classList
+            [ ( "a-form__field__customSelect__list__item", True )
+            , ( "is-selected", ((==) optionValue << Maybe.withDefault "" << reader) model )
+            ]
+        , (onClick << tagger << normalizeInput) optionValue
+        ]
+        [ text optionValue
         ]
 
 

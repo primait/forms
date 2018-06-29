@@ -4,7 +4,7 @@ Provides a set of configuration options for building forms components. Here's a 
 - Input text
 - Textarea
 - Select
-- Radio 
+- Radio
 - Checkbox
 - Datepicker
 - Autocomplete
@@ -29,3 +29,8 @@ Once configured, a field must be rendered by calling the `render` method.
 
 # Use example
 See `examples/FormApp.elm`
+
+# Running example
+- Run `elm-reactor`
+- Open `http://localhost:8000`
+- Navigate to `http://localhost:8000/examples/FormApp.elm`

@@ -3,14 +3,14 @@ module FormApp exposing (..)
 import Date exposing (Date, Day(..), Month(..))
 import Date.Format
 import DatePicker exposing (DatePicker)
-import Form
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Prima.Form as Form
     exposing
         ( FormField
         , FormFieldConfig
         , Validation(..)
         )
-import Html exposing (..)
-import Html.Attributes exposing (..)
 import Task
 import Tuple
 
