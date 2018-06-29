@@ -491,28 +491,30 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
     in
     wrapper
         [ renderLabel slug label
-        , Html.input
-            ([ type_ "text"
-             , onInput (filterTagger << normalizeInput)
-             , (value << Maybe.withDefault "" << filterReader) model
-             , id slug
-             , name slug
-             , disabled isDisabled
-             , classList
-                [ ( "a-form__field__input", True )
-                , ( "a-form__field__input--autocomplete", True )
-                , ( "is-valid", valid )
-                , ( "is-invalid", not valid && not pristine )
-                , ( "is-pristine", pristine )
-                , ( "is-touched", not pristine )
-                ]
-             ]
-                ++ customAttributes
-            )
-            []
-        , ul
+        , div
             [ class "a-form__field__autocomplete" ]
-            (List.map (renderAutocompleteOption model config) options)
+            [ Html.input
+                ([ type_ "text"
+                 , onInput (filterTagger << normalizeInput)
+                 , (value << Maybe.withDefault "" << filterReader) model
+                 , id slug
+                 , name slug
+                 , disabled isDisabled
+                 , classList
+                    [ ( "a-form__field__input", True )
+                    , ( "is-valid", valid )
+                    , ( "is-invalid", not valid && not pristine )
+                    , ( "is-pristine", pristine )
+                    , ( "is-touched", not pristine )
+                    ]
+                 ]
+                    ++ customAttributes
+                )
+                []
+            , ul
+                [ class "a-form__field__autocomplete__list" ]
+                (List.map (renderAutocompleteOption model config) options)
+            ]
         ]
 
 
@@ -520,7 +522,7 @@ renderAutocompleteOption : model -> AutocompleteConfig model msg -> ( String, St
 renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) ( optionName, optionValue ) =
     li
         [ classList
-            [ ( "a-form__field__autocomplete__item", True )
+            [ ( "a-form__field__autocomplete__list__item", True )
             , ( "is-selected", ((==) optionValue << Maybe.withDefault "" << choiceReader) model )
             ]
         , (onClick << choiceTagger << normalizeInput) optionValue
