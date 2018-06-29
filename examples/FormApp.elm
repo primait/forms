@@ -110,7 +110,7 @@ update msg model =
             { model | privacy = value } ! []
 
         UpdateField Country value ->
-            { model | country = value, isOpenCountry = False } ! []
+            { model | country = value, countryFilter = Nothing, isOpenCountry = False } ! []
 
         UpdateDate DateOfBirth dpMsg ->
             let

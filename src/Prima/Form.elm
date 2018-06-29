@@ -483,13 +483,34 @@ renderDatepicker model { reader, tagger, slug, label, instance, settings } valid
 
 
 renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> Html msg
-renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled, isOpen, noResults, customAttributes, options } as config) validations =
+renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagger, slug, label, isDisabled, isOpen, noResults, customAttributes, options } as config) validations =
     let
         valid =
             isValid model (FormFieldAutocompleteConfig config validations)
 
         pristine =
             (not << isValid model) (FormFieldAutocompleteConfig config [ NotEmpty ])
+
+        valueAttr =
+            case choiceReader model of
+                Just val ->
+                    options
+                        |> List.filter (\( optionName, optionValue ) -> (Maybe.withDefault False << Maybe.map ((==) optionValue) << choiceReader) model)
+                        |> List.map Tuple.first
+                        |> List.head
+                        |> Maybe.withDefault ""
+                        |> value
+
+                Nothing ->
+                    (value << Maybe.withDefault "" << filterReader) model
+
+        clickAttr =
+            case choiceReader model of
+                Just _ ->
+                    [ (onClick << choiceTagger << normalizeInput) "" ]
+
+                Nothing ->
+                    []
     in
     wrapper
         [ renderLabel slug label
@@ -502,7 +523,7 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
             [ Html.input
                 ([ type_ "text"
                  , onInput (filterTagger << normalizeInput)
-                 , (value << Maybe.withDefault "" << filterReader) model
+                 , valueAttr
                  , id slug
                  , name slug
                  , disabled isDisabled
@@ -515,6 +536,7 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
                     ]
                  ]
                     ++ customAttributes
+                    ++ clickAttr
                 )
                 []
             , ul
