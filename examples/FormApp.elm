@@ -25,6 +25,7 @@ type alias Model =
     , dateOfBirthDP : Maybe DatePicker
     , country : Maybe String
     , countryFilter : Maybe String
+    , isOpenCountry : Bool
     }
 
 
@@ -40,6 +41,7 @@ initialModel =
         Nothing
         Nothing
         Nothing
+        False
 
 
 type FieldName
@@ -56,7 +58,7 @@ type Msg
     | UpdateAutocomplete FieldName (Maybe String)
     | UpdateDate FieldName DatePicker.Msg
     | UpdateFlag FieldName Bool
-    | ToggleSelect FieldName Bool
+    | Toggle FieldName Bool
     | FetchDateToday Date
 
 
@@ -108,7 +110,7 @@ update msg model =
             { model | privacy = value } ! []
 
         UpdateField Country value ->
-            { model | country = value } ! []
+            { model | country = value, isOpenCountry = False } ! []
 
         UpdateDate DateOfBirth dpMsg ->
             let
@@ -142,9 +144,9 @@ update msg model =
                 ! [ Cmd.map (UpdateDate DateOfBirth) dpCmd ]
 
         UpdateAutocomplete Country value ->
-            { model | countryFilter = value } ! []
+            { model | countryFilter = value, isOpenCountry = True } ! []
 
-        ToggleSelect City isOpen ->
+        Toggle City isOpen ->
             { model | isOpenCity = isOpen } ! []
 
         _ ->
@@ -197,7 +199,7 @@ cityConfig isOpen =
         isOpen
         []
         .city
-        (ToggleSelect City)
+        (Toggle City)
         (UpdateField City)
         (List.sortBy Tuple.first
             [ ( "Milano", "MI" )
@@ -225,7 +227,7 @@ dateOfBirthConfig datepicker =
 
 
 countryConfig : Model -> FormField Model Msg
-countryConfig { countryFilter } =
+countryConfig { countryFilter, isOpenCountry } =
     let
         lowerFilter =
             (String.toLower << Maybe.withDefault "") countryFilter
@@ -234,6 +236,8 @@ countryConfig { countryFilter } =
         "country"
         "Country"
         False
+        isOpenCountry
+        (Just "Nessun risultato disponibile")
         []
         .countryFilter
         .country

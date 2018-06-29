@@ -142,6 +142,8 @@ type alias AutocompleteConfig model msg =
     { slug : String
     , label : String
     , isDisabled : Bool
+    , isOpen : Bool
+    , noResults : Maybe String
     , customAttributes : List (Attribute msg)
     , filterReader : model -> Maybe String
     , choiceReader : model -> Maybe String
@@ -195,9 +197,9 @@ datepickerConfig slug label isDisabled reader tagger datepicker settings validat
 
 {-| Autocomplete configuration method.
 -}
-autocompleteConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> List ( String, String ) -> List (Validation model) -> FormField model msg
-autocompleteConfig slug label isDisabled customAttributes filterReader choiceReader filterTagger choiceTagger options validations =
-    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled customAttributes filterReader choiceReader filterTagger choiceTagger options) validations
+autocompleteConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> List ( String, String ) -> List (Validation model) -> FormField model msg
+autocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger options validations =
+    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger options) validations
 
 
 {-| The only available method to Render a component.
@@ -481,7 +483,7 @@ renderDatepicker model { reader, tagger, slug, label, instance, settings } valid
 
 
 renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> Html msg
-renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled, customAttributes, options } as config) validations =
+renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled, isOpen, noResults, customAttributes, options } as config) validations =
     let
         valid =
             isValid model (FormFieldAutocompleteConfig config validations)
@@ -492,7 +494,11 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
     wrapper
         [ renderLabel slug label
         , div
-            [ class "a-form__field__autocomplete" ]
+            [ classList
+                [ ( "a-form__field__autocomplete", True )
+                , ( "is-open", isOpen )
+                ]
+            ]
             [ Html.input
                 ([ type_ "text"
                  , onInput (filterTagger << normalizeInput)
@@ -513,7 +519,11 @@ renderAutocomplete model ({ filterReader, filterTagger, slug, label, isDisabled,
                 []
             , ul
                 [ class "a-form__field__autocomplete__list" ]
-                (List.map (renderAutocompleteOption model config) options)
+                (if List.length options > 0 then
+                    List.map (renderAutocompleteOption model config) options
+                 else
+                    (List.singleton << renderAutocompleteNoResults model) config
+                )
             ]
         ]
 
@@ -528,6 +538,15 @@ renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) ( opti
         , (onClick << choiceTagger << normalizeInput) optionValue
         ]
         [ text optionName
+        ]
+
+
+renderAutocompleteNoResults : model -> AutocompleteConfig model msg -> Html msg
+renderAutocompleteNoResults model { noResults } =
+    li
+        [ class "a-form__field__autocomplete__list__noResults"
+        ]
+        [ (text << Maybe.withDefault "") noResults
         ]
 
 
@@ -585,11 +604,17 @@ validate model config validation =
         ( NotEmpty, FormFieldSelectConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
+        ( NotEmpty, FormFieldAutocompleteConfig { choiceReader } _ ) ->
+            (not << isEmpty << Maybe.withDefault "" << choiceReader) model
+
         ( Expression exp, FormFieldTextConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
         ( Expression exp, FormFieldTextareaConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
+
+        ( Expression exp, FormFieldAutocompleteConfig { choiceReader } _ ) ->
+            (Regex.contains exp << Maybe.withDefault "" << choiceReader) model
 
         ( Custom validator, _ ) ->
             validator model
