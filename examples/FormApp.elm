@@ -19,6 +19,7 @@ type alias Model =
     { userName : Maybe String
     , gender : Maybe String
     , city : Maybe String
+    , isOpenCity : Bool
     , privacy : Bool
     , dateOfBirth : Maybe Date
     , dateOfBirthDP : Maybe DatePicker
@@ -33,6 +34,7 @@ initialModel =
         Nothing
         Nothing
         Nothing
+        False
         False
         Nothing
         Nothing
@@ -54,6 +56,7 @@ type Msg
     | UpdateAutocomplete FieldName (Maybe String)
     | UpdateDate FieldName DatePicker.Msg
     | UpdateFlag FieldName Bool
+    | ToggleSelect FieldName Bool
     | FetchDateToday Date
 
 
@@ -141,6 +144,9 @@ update msg model =
         UpdateAutocomplete Country value ->
             { model | countryFilter = value } ! []
 
+        ToggleSelect City isOpen ->
+            { model | isOpenCity = isOpen } ! []
+
         _ ->
             model ! []
 
@@ -182,14 +188,16 @@ privacyConfig =
         []
 
 
-cityConfig : FormField Model Msg
-cityConfig =
+cityConfig : Bool -> FormField Model Msg
+cityConfig isOpen =
     Form.selectConfig
         "city"
         "City"
         False
+        isOpen
         []
         .city
+        (ToggleSelect City)
         (UpdateField City)
         (List.sortBy Tuple.first
             [ ( "Milano", "MI" )
@@ -250,7 +258,7 @@ view model =
         [ Form.render model userNameConfig
         , Form.render model genderConfig
         , Form.render model privacyConfig
-        , Form.render model cityConfig
+        , Form.render model (cityConfig model.isOpenCity)
         , renderOrNothing (Maybe.map (Form.render model << dateOfBirthConfig) model.dateOfBirthDP)
         , Form.render model (countryConfig model)
         ]

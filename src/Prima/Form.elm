@@ -117,9 +117,11 @@ type alias SelectConfig model msg =
     { slug : String
     , label : String
     , isDisabled : Bool
+    , isOpen : Bool
     , customAttributes : List (Attribute msg)
     , reader : model -> Maybe String
-    , tagger : Maybe String -> msg
+    , toggleTagger : Bool -> msg
+    , optionTagger : Maybe String -> msg
     , options : List ( String, String )
     , showEmptyOption : Bool
     }
@@ -179,9 +181,9 @@ checkboxConfig slug label isDisabled customAttributes reader tagger validations 
 
 {-| Select configuration method.
 -}
-selectConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List ( String, String ) -> Bool -> List (Validation model) -> FormField model msg
-selectConfig slug label isDisabled customAttributes reader tagger options showEmptyOption validations =
-    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled customAttributes reader tagger options showEmptyOption) validations
+selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> List ( String, String ) -> Bool -> List (Validation model) -> FormField model msg
+selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger options showEmptyOption validations =
+    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger options showEmptyOption) validations
 
 
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
@@ -372,7 +374,7 @@ renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes
 
 
 renderSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
-renderSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, customAttributes } as config) validations =
+renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisabled, customAttributes } as config) validations =
     let
         options =
             if showEmptyOption then
@@ -390,7 +392,7 @@ renderSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, 
         [ renderLabel slug label
         , renderCustomSelect model config validations
         , Html.select
-            ([ onInput (tagger << normalizeInput)
+            ([ onInput (optionTagger << normalizeInput)
              , id slug
              , name slug
              , disabled isDisabled
@@ -409,7 +411,7 @@ renderSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, 
 
 
 renderSelectOption : model -> SelectConfig model msg -> ( String, String ) -> Html msg
-renderSelectOption model { reader, tagger, slug, label } ( optionName, optionValue ) =
+renderSelectOption model { reader, slug, label } ( optionName, optionValue ) =
     option
         [ value optionValue
         , (selected << (==) optionValue << Maybe.withDefault "" << reader) model
@@ -419,13 +421,10 @@ renderSelectOption model { reader, tagger, slug, label } ( optionName, optionVal
 
 
 renderCustomSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
-renderCustomSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisabled, customAttributes } as config) validations =
+renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpen, customAttributes } as config) validations =
     let
         options =
-            if showEmptyOption then
-                ( "", "" ) :: config.options
-            else
-                config.options
+            config.options
 
         valid =
             isValid model (FormFieldSelectConfig config validations)
@@ -443,6 +442,7 @@ renderCustomSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisa
     div
         [ classList
             [ ( "a-form__field__customSelect", True )
+            , ( "is-open", isOpen )
             , ( "is-valid", valid )
             , ( "is-invalid", not valid && not pristine )
             , ( "is-pristine", pristine )
@@ -451,7 +451,9 @@ renderCustomSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisa
             ]
         ]
         [ span
-            [ class "a-form__field__customSelect__status" ]
+            [ class "a-form__field__customSelect__status"
+            , (onClick << toggleTagger << not) isOpen
+            ]
             [ text currentValue
             ]
         , ul
@@ -461,15 +463,15 @@ renderCustomSelect model ({ slug, label, reader, tagger, showEmptyOption, isDisa
 
 
 renderCustomSelectOption : model -> SelectConfig model msg -> ( String, String ) -> Html msg
-renderCustomSelectOption model { reader, tagger, slug, label } ( optionName, optionValue ) =
+renderCustomSelectOption model { reader, optionTagger, slug, label } ( optionName, optionValue ) =
     li
         [ classList
             [ ( "a-form__field__customSelect__list__item", True )
             , ( "is-selected", ((==) optionValue << Maybe.withDefault "" << reader) model )
             ]
-        , (onClick << tagger << normalizeInput) optionValue
+        , (onClick << optionTagger << normalizeInput) optionValue
         ]
-        [ text optionValue
+        [ text optionName
         ]
 
 
