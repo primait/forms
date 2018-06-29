@@ -336,7 +336,7 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
         []
     , Html.label
         [ for optionSlug
-        , class "a-form__field__label a-form__field__label--option"
+        , class "a-form__field__radio__label"
         ]
         [ text optionName
         ]
@@ -363,7 +363,7 @@ renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes
             []
         , Html.label
             [ for slug
-            , class "a-form__field__label a-form__field__label--option"
+            , class "a-form__field__checkbox__label"
             ]
             [ text " "
             ]
