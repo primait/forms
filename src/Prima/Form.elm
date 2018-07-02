@@ -320,6 +320,13 @@ renderLabel slug label =
         ]
 
 
+renderError : String -> Html msg
+renderError error =
+    span
+        [ class "a-form__field__error" ]
+        [ text error ]
+
+
 renderInput : model -> TextConfig model msg -> List (Validation model) -> Html msg
 renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
     let
@@ -327,7 +334,7 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, 
             isValid model (FormFieldTextConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldTextConfig config [ NotEmpty ])
+            (not << isValid model) (FormFieldTextConfig config [ NotEmpty "" ])
     in
     wrapper
         [ renderLabel slug label
@@ -349,6 +356,13 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, 
                 ++ customAttributes
             )
             []
+        , (renderIf (not valid && not pristine)
+            << renderError
+            << String.join " "
+            << pickError model
+            << FormFieldTextConfig config
+          )
+            validations
         , renderExtraHtml appendableHtml
         ]
 
@@ -360,7 +374,7 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
             isValid model (FormFieldTextareaConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldTextareaConfig config [ NotEmpty ])
+            (not << isValid model) (FormFieldTextareaConfig config [ NotEmpty "" ])
     in
     wrapper
         [ renderLabel slug label
@@ -381,15 +395,34 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
                 ++ customAttributes
             )
             []
+        , (renderIf (not valid && not pristine)
+            << renderError
+            << String.join " "
+            << pickError model
+            << FormFieldTextareaConfig config
+          )
+            validations
         , renderExtraHtml appendableHtml
         ]
 
 
 renderRadio : model -> RadioConfig model msg -> List (Validation model) -> Html msg
 renderRadio model ({ slug, label, options, appendableHtml } as config) validations =
+    let
+        valid =
+            isValid model (FormFieldRadioConfig config validations)
+    in
     wrapper
         (renderLabel slug label
             :: (List.concat << List.map (renderRadioOption model config)) options
+            ++ (List.singleton
+                    << renderIf (not valid)
+                    << renderError
+                    << String.join " "
+                    << pickError model
+                    << FormFieldRadioConfig config
+               )
+                validations
             ++ (List.singleton << renderExtraHtml) appendableHtml
         )
 
@@ -425,7 +458,11 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
 
 
 renderCheckbox : model -> CheckboxConfig model msg -> List (Validation model) -> Html msg
-renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } validations =
+renderCheckbox model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
+    let
+        valid =
+            isValid model (FormFieldCheckboxConfig config validations)
+    in
     wrapper
         [ renderLabel slug label
         , Html.input
@@ -448,15 +485,34 @@ renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes
             ]
             [ text " "
             ]
+        , (renderIf (not valid)
+            << renderError
+            << String.join " "
+            << pickError model
+            << FormFieldCheckboxConfig config
+          )
+            validations
         , renderExtraHtml appendableHtml
         ]
 
 
 renderCheckboxWithOptions : model -> CheckboxWithOptionsConfig model msg -> List (Validation model) -> Html msg
 renderCheckboxWithOptions model ({ slug, label, options, appendableHtml } as config) validations =
+    let
+        valid =
+            isValid model (FormFieldCheckboxWithOptionsConfig config validations)
+    in
     wrapper
         (renderLabel slug label
             :: (List.concat << List.map (renderCheckboxOption model config)) options
+            ++ (List.singleton
+                    << renderIf (not valid)
+                    << renderError
+                    << String.join " "
+                    << pickError model
+                    << FormFieldCheckboxWithOptionsConfig config
+               )
+                validations
             ++ (List.singleton << renderExtraHtml) appendableHtml
         )
 
@@ -503,7 +559,7 @@ renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisa
             isValid model (FormFieldSelectConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty ])
+            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty "" ])
     in
     wrapper
         [ renderLabel slug label
@@ -524,6 +580,13 @@ renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisa
                 ++ customAttributes
             )
             (List.map (renderSelectOption model config) options)
+        , (renderIf (not valid && not pristine)
+            << renderError
+            << String.join " "
+            << pickError model
+            << FormFieldSelectConfig config
+          )
+            validations
         , renderExtraHtml appendableHtml
         ]
 
@@ -548,7 +611,7 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
             isValid model (FormFieldSelectConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty ])
+            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty "" ])
 
         currentValue =
             options
@@ -594,10 +657,24 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } option =
 
 
 renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> Html msg
-renderDatepicker model { reader, tagger, slug, label, instance, settings, appendableHtml } validations =
+renderDatepicker model ({ reader, tagger, slug, label, instance, settings, appendableHtml } as config) validations =
+    let
+        valid =
+            isValid model (FormFieldDatepickerConfig config validations)
+
+        pristine =
+            (not << isValid model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+    in
     wrapper
         [ renderLabel slug label
         , Html.map tagger (DatePicker.view (reader model) settings instance)
+        , (renderIf (not valid && not pristine)
+            << renderError
+            << String.join " "
+            << pickError model
+            << FormFieldDatepickerConfig config
+          )
+            validations
         , renderExtraHtml appendableHtml
         ]
 
@@ -609,7 +686,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
             isValid model (FormFieldAutocompleteConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldAutocompleteConfig config [ NotEmpty ])
+            (not << isValid model) (FormFieldAutocompleteConfig config [ NotEmpty "" ])
 
         valueAttr =
             case choiceReader model of
@@ -667,6 +744,13 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                     (List.singleton << renderAutocompleteNoResults model) config
                 )
             ]
+        , (renderIf (not valid && not pristine)
+            << renderError
+            << String.join " "
+            << pickError model
+            << FormFieldAutocompleteConfig config
+          )
+            validations
         , renderExtraHtml appendableHtml
         ]
 
@@ -696,77 +780,103 @@ renderAutocompleteNoResults model { noResults } =
 {-| Validation rules for a FormField.
 -}
 type Validation model
-    = NotEmpty
-    | Expression Regex.Regex
-    | Custom (model -> Bool)
+    = NotEmpty String
+    | Expression Regex.Regex String
+    | Custom (model -> Bool) String
 
 
 {-| Validate a FormField.
 -}
 isValid : model -> FormFieldConfig model msg -> Bool
 isValid model opaqueConfig =
-    let
-        rules =
-            case opaqueConfig of
-                FormFieldTextConfig _ validations ->
-                    validations
-
-                FormFieldTextareaConfig _ validations ->
-                    validations
-
-                FormFieldRadioConfig _ validations ->
-                    validations
-
-                FormFieldSelectConfig _ validations ->
-                    validations
-
-                FormFieldCheckboxConfig _ validations ->
-                    validations
-
-                FormFieldCheckboxWithOptionsConfig _ validations ->
-                    validations
-
-                FormFieldDatepickerConfig _ validations ->
-                    validations
-
-                FormFieldAutocompleteConfig _ validations ->
-                    validations
-    in
-    List.all (validate model opaqueConfig) rules
+    List.all (validate model opaqueConfig) (pickValidationRules opaqueConfig)
 
 
 validate : model -> FormFieldConfig model msg -> Validation model -> Bool
 validate model config validation =
     case ( validation, config ) of
-        ( NotEmpty, FormFieldTextConfig { reader } _ ) ->
+        ( NotEmpty _, FormFieldTextConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
-        ( NotEmpty, FormFieldTextareaConfig { reader } _ ) ->
+        ( NotEmpty _, FormFieldTextareaConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
-        ( NotEmpty, FormFieldRadioConfig { reader } _ ) ->
+        ( NotEmpty _, FormFieldRadioConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
-        ( NotEmpty, FormFieldSelectConfig { reader } _ ) ->
+        ( NotEmpty _, FormFieldSelectConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
-        ( NotEmpty, FormFieldAutocompleteConfig { choiceReader } _ ) ->
+        ( NotEmpty _, FormFieldAutocompleteConfig { choiceReader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << choiceReader) model
 
-        ( Expression exp, FormFieldTextConfig { reader } _ ) ->
+        ( Expression exp _, FormFieldTextConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
-        ( Expression exp, FormFieldTextareaConfig { reader } _ ) ->
+        ( Expression exp _, FormFieldTextareaConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
-        ( Expression exp, FormFieldAutocompleteConfig { choiceReader } _ ) ->
+        ( Expression exp _, FormFieldAutocompleteConfig { choiceReader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << choiceReader) model
 
-        ( Custom validator, _ ) ->
+        ( Custom validator _, _ ) ->
             validator model
 
         ( _, _ ) ->
             True
+
+
+pickValidationRules : FormFieldConfig model msg -> List (Validation model)
+pickValidationRules opaqueConfig =
+    case opaqueConfig of
+        FormFieldTextConfig _ validations ->
+            validations
+
+        FormFieldTextareaConfig _ validations ->
+            validations
+
+        FormFieldRadioConfig _ validations ->
+            validations
+
+        FormFieldSelectConfig _ validations ->
+            validations
+
+        FormFieldCheckboxConfig _ validations ->
+            validations
+
+        FormFieldCheckboxWithOptionsConfig _ validations ->
+            validations
+
+        FormFieldDatepickerConfig _ validations ->
+            validations
+
+        FormFieldAutocompleteConfig _ validations ->
+            validations
+
+
+pickError : model -> FormFieldConfig model msg -> List String
+pickError model opaqueConfig =
+    List.filterMap
+        (\rule ->
+            if validate model opaqueConfig rule then
+                Nothing
+            else
+                (Just << pickValidationError) rule
+        )
+        (pickValidationRules opaqueConfig)
+
+
+pickValidationError : Validation model -> String
+pickValidationError rule =
+    case rule of
+        NotEmpty error ->
+            error
+
+        Expression exp error ->
+            error
+
+        Custom customRule error ->
+            error
 
 
 renderExtraHtml : Maybe (Html msg) -> Html msg
@@ -790,3 +900,11 @@ normalizeInput str =
 isEmpty : String -> Bool
 isEmpty =
     (==) "" << String.trim
+
+
+renderIf : Bool -> Html msg -> Html msg
+renderIf condition html =
+    if condition then
+        html
+    else
+        text ""

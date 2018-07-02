@@ -199,11 +199,13 @@ userNameConfig =
         "user_name"
         "User name"
         False
-        [ maxlength 3 ]
+        [ minlength 3, maxlength 12 ]
         .userName
         (UpdateField UserName)
-        (Just (span [] [ text "type inside me" ]))
-        [ NotEmpty ]
+        Nothing
+        [ NotEmpty "Empty value is not acceptable."
+        , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .userName) "Value must be between 3 and 12 characters length."
+        ]
 
 
 noteConfig : FormField Model Msg
@@ -216,7 +218,7 @@ noteConfig =
         .note
         (UpdateField Note)
         Nothing
-        [ NotEmpty ]
+        [ NotEmpty "Empty value is not acceptable." ]
 
 
 genderConfig : FormField Model Msg
@@ -232,7 +234,7 @@ genderConfig =
         , RadioOption "Female" "female"
         ]
         Nothing
-        [ NotEmpty ]
+        [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 
 privacyConfig : FormField Model Msg
@@ -283,7 +285,7 @@ cityConfig isOpen =
         )
         True
         Nothing
-        [ NotEmpty ]
+        [ NotEmpty "Empty value is not acceptable." ]
 
 
 dateOfBirthConfig : DatePicker -> FormField Model Msg
@@ -327,7 +329,7 @@ countryConfig { countryFilter, isOpenCountry } =
             |> List.filter (String.contains lowerFilter << String.toLower << .label)
         )
         Nothing
-        [ NotEmpty ]
+        [ NotEmpty "Empty value is not acceptable." ]
 
 
 view : Model -> Html Msg
