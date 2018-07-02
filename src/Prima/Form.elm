@@ -537,7 +537,7 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
         currentValue =
             options
                 |> List.filter (\option -> ((==) option.slug << Maybe.withDefault "" << reader) model)
-                |> List.map .slug
+                |> List.map .label
                 |> List.head
                 |> Maybe.withDefault ""
     in
@@ -599,7 +599,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 Just val ->
                     options
                         |> List.filter (\option -> (Maybe.withDefault False << Maybe.map ((==) option.slug) << choiceReader) model)
-                        |> List.map .slug
+                        |> List.map .label
                         |> List.head
                         |> Maybe.withDefault ""
                         |> value
