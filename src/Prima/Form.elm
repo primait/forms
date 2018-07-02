@@ -331,7 +331,7 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes }
              , classList
                 [ ( "a-form__field__input", True )
                 , ( "is-valid", valid )
-                , ( "is-invalid", not valid && not pristine )
+                , ( "is-invalid", not valid )
                 , ( "is-pristine", pristine )
                 , ( "is-touched", not pristine )
                 ]
@@ -362,7 +362,7 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
              , classList
                 [ ( "a-form__field__textarea", True )
                 , ( "is-valid", valid )
-                , ( "is-invalid", not valid && not pristine )
+                , ( "is-invalid", not valid )
                 , ( "is-pristine", pristine )
                 , ( "is-touched", not pristine )
                 ]
@@ -501,7 +501,7 @@ renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisa
              , classList
                 [ ( "a-form__field__select", True )
                 , ( "is-valid", valid )
-                , ( "is-invalid", not valid && not pristine )
+                , ( "is-invalid", not valid )
                 , ( "is-pristine", pristine )
                 , ( "is-touched", not pristine )
                 ]
@@ -546,7 +546,7 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
             [ ( "a-form__field__customSelect", True )
             , ( "is-open", isOpen )
             , ( "is-valid", valid )
-            , ( "is-invalid", not valid && not pristine )
+            , ( "is-invalid", not valid )
             , ( "is-pristine", pristine )
             , ( "is-touched", not pristine )
             , ( "is-disabled", isDisabled )
@@ -633,7 +633,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                  , classList
                     [ ( "a-form__field__input", True )
                     , ( "is-valid", valid )
-                    , ( "is-invalid", not valid && not pristine )
+                    , ( "is-invalid", not valid )
                     , ( "is-pristine", pristine )
                     , ( "is-touched", not pristine )
                     ]
