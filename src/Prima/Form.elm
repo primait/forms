@@ -479,7 +479,10 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } ( optionNam
 
 renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> Html msg
 renderDatepicker model { reader, tagger, slug, label, instance, settings } validations =
-    Html.map tagger (DatePicker.view (reader model) settings instance)
+    wrapper
+        [ renderLabel slug label
+        , Html.map tagger (DatePicker.view (reader model) settings instance)
+        ]
 
 
 renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> Html msg
