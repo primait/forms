@@ -21,6 +21,7 @@ import Tuple
 
 type alias Model =
     { userName : Maybe String
+    , note : Maybe String
     , gender : Maybe String
     , city : Maybe String
     , isOpenCity : Bool
@@ -48,6 +49,7 @@ initialModel =
         Nothing
         Nothing
         Nothing
+        Nothing
         False
         False
         Nothing
@@ -70,6 +72,7 @@ type FieldName
     | DateOfBirth
     | Country
     | VisitedCountries
+    | Note
 
 
 type Msg
@@ -119,6 +122,9 @@ update msg model =
 
         UpdateField UserName value ->
             { model | userName = value } ! []
+
+        UpdateField Note value ->
+            { model | note = value } ! []
 
         UpdateField Gender value ->
             { model | gender = value } ! []
@@ -196,6 +202,20 @@ userNameConfig =
         [ maxlength 3 ]
         .userName
         (UpdateField UserName)
+        (Just (span [] [ text "type inside me" ]))
+        [ NotEmpty ]
+
+
+noteConfig : FormField Model Msg
+noteConfig =
+    Form.textareaConfig
+        "note"
+        "Note"
+        False
+        []
+        .note
+        (UpdateField Note)
+        Nothing
         [ NotEmpty ]
 
 
@@ -211,6 +231,7 @@ genderConfig =
         [ RadioOption "Male" "male"
         , RadioOption "Female" "female"
         ]
+        Nothing
         [ NotEmpty ]
 
 
@@ -223,6 +244,7 @@ privacyConfig =
         []
         .privacy
         (UpdateFlag Privacy)
+        Nothing
         []
 
 
@@ -236,6 +258,7 @@ visitedCountriesConfig { visitedCountries } =
         (List.map (\( label, slug, checked ) -> ( slug, checked )) << .visitedCountries)
         (UpdateCheckbox VisitedCountries)
         (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) visitedCountries)
+        Nothing
         []
 
 
@@ -259,6 +282,7 @@ cityConfig isOpen =
             ]
         )
         True
+        Nothing
         [ NotEmpty ]
 
 
@@ -272,6 +296,7 @@ dateOfBirthConfig datepicker =
         (UpdateDate DateOfBirth)
         datepicker
         datepickerSettings
+        Nothing
         []
 
 
@@ -301,6 +326,7 @@ countryConfig { countryFilter, isOpenCountry } =
          ]
             |> List.filter (String.contains lowerFilter << String.toLower << .label)
         )
+        Nothing
         [ NotEmpty ]
 
 
@@ -309,6 +335,7 @@ view model =
     div
         [ class "a-container a-container--small" ]
         [ Form.render model userNameConfig
+        , Form.render model noteConfig
         , Form.render model genderConfig
         , Form.render model privacyConfig
         , Form.render model (visitedCountriesConfig model)
