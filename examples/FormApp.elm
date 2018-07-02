@@ -7,8 +7,12 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Prima.Form as Form
     exposing
-        ( FormField
+        ( AutocompleteOption
+        , CheckboxOption
+        , FormField
         , FormFieldConfig
+        , RadioOption
+        , SelectOption
         , Validation(..)
         )
 import Task
@@ -26,7 +30,16 @@ type alias Model =
     , country : Maybe String
     , countryFilter : Maybe String
     , isOpenCountry : Bool
+    , visitedCountries : List ( Label, Slug, Bool )
     }
+
+
+type alias Label =
+    String
+
+
+type alias Slug =
+    String
 
 
 initialModel : Model
@@ -42,6 +55,11 @@ initialModel =
         Nothing
         Nothing
         False
+        [ ( "Italy", "ITA", False )
+        , ( "France", "FRA", False )
+        , ( "U.S.A", "USA", False )
+        , ( "Great Britain", "GB", False )
+        ]
 
 
 type FieldName
@@ -51,6 +69,7 @@ type FieldName
     | City
     | DateOfBirth
     | Country
+    | VisitedCountries
 
 
 type Msg
@@ -58,6 +77,7 @@ type Msg
     | UpdateAutocomplete FieldName (Maybe String)
     | UpdateDate FieldName DatePicker.Msg
     | UpdateFlag FieldName Bool
+    | UpdateCheckbox FieldName Slug Bool
     | Toggle FieldName Bool
     | FetchDateToday Date
 
@@ -146,6 +166,20 @@ update msg model =
         UpdateAutocomplete Country value ->
             { model | countryFilter = value, isOpenCountry = True } ! []
 
+        UpdateCheckbox VisitedCountries slug isChecked ->
+            { model
+                | visitedCountries =
+                    List.map
+                        (\( optLabel, optSlug, optChecked ) ->
+                            if optSlug == slug then
+                                ( optLabel, optSlug, isChecked )
+                            else
+                                ( optLabel, optSlug, optChecked )
+                        )
+                        model.visitedCountries
+            }
+                ! []
+
         Toggle City isOpen ->
             { model | isOpenCity = isOpen } ! []
 
@@ -174,7 +208,9 @@ genderConfig =
         []
         .gender
         (UpdateField Gender)
-        [ ( "Male", "male" ), ( "Female", "female" ) ]
+        [ RadioOption "Male" "male"
+        , RadioOption "Female" "female"
+        ]
         [ NotEmpty ]
 
 
@@ -190,6 +226,19 @@ privacyConfig =
         []
 
 
+visitedCountriesConfig : Model -> FormField Model Msg
+visitedCountriesConfig { visitedCountries } =
+    Form.checkboxWithOptionsConfig
+        "visited_countries"
+        "Visited countries"
+        False
+        []
+        (List.map (\( label, slug, checked ) -> ( slug, checked )) << .visitedCountries)
+        (UpdateCheckbox VisitedCountries)
+        (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) visitedCountries)
+        []
+
+
 cityConfig : Bool -> FormField Model Msg
 cityConfig isOpen =
     Form.selectConfig
@@ -201,12 +250,12 @@ cityConfig isOpen =
         .city
         (Toggle City)
         (UpdateField City)
-        (List.sortBy Tuple.first
-            [ ( "Milano", "MI" )
-            , ( "Torino", "TO" )
-            , ( "Roma", "RO" )
-            , ( "Napoli", "NA" )
-            , ( "Genova", "GE" )
+        (List.sortBy .label
+            [ SelectOption "Milan" "MI"
+            , SelectOption "Turin" "TO"
+            , SelectOption "Rome" "RO"
+            , SelectOption "Naples" "NA"
+            , SelectOption "Genoa" "GE"
             ]
         )
         True
@@ -243,14 +292,14 @@ countryConfig { countryFilter, isOpenCountry } =
         .country
         (UpdateAutocomplete Country)
         (UpdateField Country)
-        ([ ( "Italy", "ITA" )
-         , ( "Brasil", "BRA" )
-         , ( "France", "FRA" )
-         , ( "England", "ENG" )
-         , ( "USA", "USA" )
-         , ( "Japan", "JAP" )
+        ([ AutocompleteOption "Italy" "ITA"
+         , AutocompleteOption "Brasil" "BRA"
+         , AutocompleteOption "France" "FRA"
+         , AutocompleteOption "England" "ENG"
+         , AutocompleteOption "USA" "USA"
+         , AutocompleteOption "Japan" "JAP"
          ]
-            |> List.filter (String.contains lowerFilter << String.toLower << Tuple.first)
+            |> List.filter (String.contains lowerFilter << String.toLower << .label)
         )
         [ NotEmpty ]
 
@@ -262,6 +311,7 @@ view model =
         [ Form.render model userNameConfig
         , Form.render model genderConfig
         , Form.render model privacyConfig
+        , Form.render model (visitedCountriesConfig model)
         , Form.render model (cityConfig model.isOpenCity)
         , renderOrNothing (Maybe.map (Form.render model << dateOfBirthConfig) model.dateOfBirthDP)
         , Form.render model (countryConfig model)

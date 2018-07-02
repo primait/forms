@@ -5,7 +5,7 @@ Provides a set of configuration options for building forms components. Here's a 
 - Textarea
 - Select
 - Radio
-- Checkbox
+- Checkbox (with single or multiple choices)
 - Datepicker
 - Autocomplete
 
@@ -19,6 +19,7 @@ You can only reconstruct the original (opaque) type:
 By using one of this configuration methods:
 - `autocompleteConfig`
 - `checkboxConfig`
+- `checkboxWithOptionsConfig`
 - `datepickerConfig`
 - `radioConfig`
 - `selectConfig`

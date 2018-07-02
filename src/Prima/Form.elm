@@ -1,10 +1,15 @@
 module Prima.Form
     exposing
-        ( FormField
+        ( AutocompleteOption
+        , CheckboxOption
+        , FormField
         , FormFieldConfig
+        , RadioOption
+        , SelectOption
         , Validation(..)
         , autocompleteConfig
         , checkboxConfig
+        , checkboxWithOptionsConfig
         , datepickerConfig
         , isValid
         , radioConfig
@@ -19,10 +24,15 @@ module Prima.Form
 @docs Validation
 @docs autocompleteConfig
 @docs checkboxConfig
+@docs checkboxWithOptionsConfig
 @docs datepickerConfig
 @docs radioConfig
 @docs selectConfig
 @docs textConfig
+@docs RadioOption
+@docs SelectOption
+@docs CheckboxOption
+@docs AutocompleteOption
 @docs isValid
 @docs render
 -}
@@ -67,6 +77,7 @@ type FormFieldConfig model msg
     | FormFieldTextareaConfig (TextareaConfig model msg) (List (Validation model))
     | FormFieldRadioConfig (RadioConfig model msg) (List (Validation model))
     | FormFieldCheckboxConfig (CheckboxConfig model msg) (List (Validation model))
+    | FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig model msg) (List (Validation model))
     | FormFieldSelectConfig (SelectConfig model msg) (List (Validation model))
     | FormFieldDatepickerConfig (DatepickerConfig model msg) (List (Validation model))
     | FormFieldAutocompleteConfig (AutocompleteConfig model msg) (List (Validation model))
@@ -99,7 +110,15 @@ type alias RadioConfig model msg =
     , customAttributes : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
-    , options : List ( String, String )
+    , options : List RadioOption
+    }
+
+
+{-| Radio's single option.
+-}
+type alias RadioOption =
+    { label : String
+    , slug : String
     }
 
 
@@ -113,6 +132,26 @@ type alias CheckboxConfig model msg =
     }
 
 
+type alias CheckboxWithOptionsConfig model msg =
+    { slug : String
+    , label : String
+    , isDisabled : Bool
+    , customAttributes : List (Attribute msg)
+    , reader : model -> List ( String, Bool )
+    , tagger : String -> Bool -> msg
+    , options : List CheckboxOption
+    }
+
+
+{-| Checkbox's single option. Can be only used with `checkboxWithOptionsConfig`.
+-}
+type alias CheckboxOption =
+    { label : String
+    , slug : String
+    , isChecked : Bool
+    }
+
+
 type alias SelectConfig model msg =
     { slug : String
     , label : String
@@ -122,8 +161,16 @@ type alias SelectConfig model msg =
     , reader : model -> Maybe String
     , toggleTagger : Bool -> msg
     , optionTagger : Maybe String -> msg
-    , options : List ( String, String )
+    , options : List SelectOption
     , showEmptyOption : Bool
+    }
+
+
+{-| Select's single option.
+-}
+type alias SelectOption =
+    { label : String
+    , slug : String
     }
 
 
@@ -149,7 +196,15 @@ type alias AutocompleteConfig model msg =
     , choiceReader : model -> Maybe String
     , filterTagger : Maybe String -> msg
     , choiceTagger : Maybe String -> msg
-    , options : List ( String, String )
+    , options : List AutocompleteOption
+    }
+
+
+{-| Autocomplete's single option.
+-}
+type alias AutocompleteOption =
+    { label : String
+    , slug : String
     }
 
 
@@ -169,7 +224,7 @@ textareaConfig slug label isDisabled customAttributes reader tagger validations 
 
 {-| Input Radio configuration method.
 -}
-radioConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List ( String, String ) -> List (Validation model) -> FormField model msg
+radioConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List RadioOption -> List (Validation model) -> FormField model msg
 radioConfig slug label isDisabled customAttributes reader tagger options validations =
     FormField <| FormFieldRadioConfig (RadioConfig slug label isDisabled customAttributes reader tagger options) validations
 
@@ -181,9 +236,16 @@ checkboxConfig slug label isDisabled customAttributes reader tagger validations 
     FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label isDisabled customAttributes reader tagger) validations
 
 
+{-| Checkbox configuration method.
+-}
+checkboxWithOptionsConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> List CheckboxOption -> List (Validation model) -> FormField model msg
+checkboxWithOptionsConfig slug label isDisabled customAttributes reader tagger options validations =
+    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label isDisabled customAttributes reader tagger options) validations
+
+
 {-| Select configuration method.
 -}
-selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> List ( String, String ) -> Bool -> List (Validation model) -> FormField model msg
+selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> List SelectOption -> Bool -> List (Validation model) -> FormField model msg
 selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger options showEmptyOption validations =
     FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger options showEmptyOption) validations
 
@@ -197,7 +259,7 @@ datepickerConfig slug label isDisabled reader tagger datepicker settings validat
 
 {-| Autocomplete configuration method.
 -}
-autocompleteConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> List ( String, String ) -> List (Validation model) -> FormField model msg
+autocompleteConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> List AutocompleteOption -> List (Validation model) -> FormField model msg
 autocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger options validations =
     FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger options) validations
 
@@ -218,6 +280,9 @@ render model (FormField opaqueConfig) =
 
         FormFieldCheckboxConfig config validation ->
             renderCheckbox model config validation
+
+        FormFieldCheckboxWithOptionsConfig config validation ->
+            renderCheckboxWithOptions model config validation
 
         FormFieldSelectConfig config validation ->
             renderSelect model config validation
@@ -318,19 +383,19 @@ renderRadio model ({ slug, label, options } as config) validations =
         options
 
 
-renderRadioOption : model -> RadioConfig model msg -> ( String, String ) -> List (Html msg)
-renderRadioOption model { reader, tagger, slug, label, options, isDisabled, customAttributes } ( optionName, optionValue ) =
+renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html msg)
+renderRadioOption model { reader, tagger, slug, label, options, isDisabled, customAttributes } option =
     let
         optionSlug =
-            String.join "_" [ slug, String.toLower optionName ]
+            String.join "_" [ slug, String.toLower option.label ]
     in
     [ Html.input
         ([ type_ "radio"
          , onInput (tagger << normalizeInput)
-         , value optionValue
+         , value option.slug
          , id optionSlug
          , name slug
-         , (checked << (==) optionValue << Maybe.withDefault "" << reader) model
+         , (checked << (==) option.slug << Maybe.withDefault "" << reader) model
          , disabled isDisabled
          , classList
             [ ( "a-form__field__radio", True )
@@ -343,7 +408,7 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
         [ for optionSlug
         , class "a-form__field__radio__label"
         ]
-        [ text optionName
+        [ text option.label
         ]
     ]
 
@@ -375,12 +440,47 @@ renderCheckbox model { reader, tagger, slug, label, isDisabled, customAttributes
         ]
 
 
+renderCheckboxWithOptions : model -> CheckboxWithOptionsConfig model msg -> List (Validation model) -> Html msg
+renderCheckboxWithOptions model ({ slug, label, options } as config) validations =
+    wrapper
+        (renderLabel slug label :: (List.concat << List.map (renderCheckboxOption model config)) options)
+
+
+renderCheckboxOption : model -> CheckboxWithOptionsConfig model msg -> CheckboxOption -> List (Html msg)
+renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as config) option =
+    let
+        slug =
+            String.join "_" [ config.slug, option.slug ]
+    in
+    [ Html.input
+        ([ type_ "checkbox"
+         , (onClick << tagger option.slug << not) option.isChecked
+         , value option.slug
+         , id slug
+         , name slug
+         , disabled isDisabled
+         , classList
+            [ ( "a-form__field__checkbox", True )
+            ]
+         ]
+            ++ customAttributes
+        )
+        []
+    , Html.label
+        [ for slug
+        , class "a-form__field__checkbox__label"
+        ]
+        [ text option.label
+        ]
+    ]
+
+
 renderSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
 renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisabled, customAttributes } as config) validations =
     let
         options =
             if showEmptyOption then
-                ( "", "" ) :: config.options
+                SelectOption " " "" :: config.options
             else
                 config.options
 
@@ -412,13 +512,13 @@ renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisa
         ]
 
 
-renderSelectOption : model -> SelectConfig model msg -> ( String, String ) -> Html msg
-renderSelectOption model { reader, slug, label } ( optionName, optionValue ) =
-    option
-        [ value optionValue
-        , (selected << (==) optionValue << Maybe.withDefault "" << reader) model
+renderSelectOption : model -> SelectConfig model msg -> SelectOption -> Html msg
+renderSelectOption model { reader, slug, label } option =
+    Html.option
+        [ value option.slug
+        , (selected << (==) option.slug << Maybe.withDefault "" << reader) model
         ]
-        [ text optionName
+        [ text option.label
         ]
 
 
@@ -436,8 +536,8 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
 
         currentValue =
             options
-                |> List.filter (\( optionName, optionValue ) -> ((==) optionValue << Maybe.withDefault "" << reader) model)
-                |> List.map Tuple.first
+                |> List.filter (\option -> ((==) option.slug << Maybe.withDefault "" << reader) model)
+                |> List.map .slug
                 |> List.head
                 |> Maybe.withDefault ""
     in
@@ -464,16 +564,16 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
         ]
 
 
-renderCustomSelectOption : model -> SelectConfig model msg -> ( String, String ) -> Html msg
-renderCustomSelectOption model { reader, optionTagger, slug, label } ( optionName, optionValue ) =
+renderCustomSelectOption : model -> SelectConfig model msg -> SelectOption -> Html msg
+renderCustomSelectOption model { reader, optionTagger, slug, label } option =
     li
         [ classList
             [ ( "a-form__field__customSelect__list__item", True )
-            , ( "is-selected", ((==) optionValue << Maybe.withDefault "" << reader) model )
+            , ( "is-selected", ((==) option.slug << Maybe.withDefault "" << reader) model )
             ]
-        , (onClick << optionTagger << normalizeInput) optionValue
+        , (onClick << optionTagger << normalizeInput) option.slug
         ]
-        [ text optionName
+        [ text option.label
         ]
 
 
@@ -498,8 +598,8 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
             case choiceReader model of
                 Just val ->
                     options
-                        |> List.filter (\( optionName, optionValue ) -> (Maybe.withDefault False << Maybe.map ((==) optionValue) << choiceReader) model)
-                        |> List.map Tuple.first
+                        |> List.filter (\option -> (Maybe.withDefault False << Maybe.map ((==) option.slug) << choiceReader) model)
+                        |> List.map .slug
                         |> List.head
                         |> Maybe.withDefault ""
                         |> value
@@ -553,16 +653,16 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
         ]
 
 
-renderAutocompleteOption : model -> AutocompleteConfig model msg -> ( String, String ) -> Html msg
-renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) ( optionName, optionValue ) =
+renderAutocompleteOption : model -> AutocompleteConfig model msg -> AutocompleteOption -> Html msg
+renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) option =
     li
         [ classList
             [ ( "a-form__field__autocomplete__list__item", True )
-            , ( "is-selected", ((==) optionValue << Maybe.withDefault "" << choiceReader) model )
+            , ( "is-selected", ((==) option.slug << Maybe.withDefault "" << choiceReader) model )
             ]
-        , (onClick << choiceTagger << normalizeInput) optionValue
+        , (onClick << choiceTagger << normalizeInput) option.slug
         ]
-        [ text optionName
+        [ text option.label
         ]
 
 
@@ -603,6 +703,9 @@ isValid model opaqueConfig =
                     validations
 
                 FormFieldCheckboxConfig _ validations ->
+                    validations
+
+                FormFieldCheckboxWithOptionsConfig _ validations ->
                     validations
 
                 FormFieldDatepickerConfig _ validations ->
