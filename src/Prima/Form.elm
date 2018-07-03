@@ -263,7 +263,14 @@ selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger o
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
 -}
 datepickerConfig : String -> String -> Bool -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker -> DatePicker.Settings -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-datepickerConfig slug label isDisabled reader tagger datepicker settings appendableHtml validations =
+datepickerConfig slug label isDisabled reader tagger datepicker datepickerSettings appendableHtml validations =
+    let
+        settings =
+            { datepickerSettings
+                | isDisabled = always isDisabled
+                , inputClassList = ( "is-disabled", isDisabled ) :: datepickerSettings.inputClassList
+            }
+    in
     FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label isDisabled reader tagger datepicker settings appendableHtml) validations
 
 
@@ -657,17 +664,42 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } option =
 
 
 renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> Html msg
-renderDatepicker model ({ reader, tagger, slug, label, instance, settings, appendableHtml } as config) validations =
+renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, settings, appendableHtml } as config) validations =
     let
         valid =
             isValid model (FormFieldDatepickerConfig config validations)
 
         pristine =
             (not << isValid model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+
+        formatDate : String -> String
+        formatDate date =
+            -- From dd/mm/yyyy to yyyy-mm-dd which is required by input[type="date"]
+            (String.join "-" << List.reverse)
+                [ String.left 2 date
+                , (String.left 2 << String.dropLeft 3) date
+                , (String.left 4 << String.dropLeft 6) date
+                ]
     in
     wrapper
         [ renderLabel slug label
         , Html.map tagger (DatePicker.view (reader model) settings instance)
+        , Html.input
+            [ type_ "date"
+            , onInput (tagger << DatePicker.pick << Result.toMaybe << Date.fromString)
+            , (value << Maybe.withDefault "" << Maybe.map (formatDate << settings.dateFormatter) << reader) model
+            , id slug
+            , name slug
+            , disabled isDisabled
+            , classList
+                [ ( "a-form__field__date", True )
+                , ( "is-valid", valid )
+                , ( "is-invalid", not valid )
+                , ( "is-pristine", pristine )
+                , ( "is-touched", not pristine )
+                ]
+            ]
+            []
         , (renderIf (not valid && not pristine)
             << renderError
             << String.join " "
