@@ -44,7 +44,8 @@ import DatePicker exposing (..)
 import Html exposing (..)
 import Html.Attributes
     exposing
-        ( checked
+        ( attribute
+        , checked
         , class
         , classList
         , disabled
@@ -311,10 +312,13 @@ render model (FormField opaqueConfig) =
             renderAutocomplete model config validation
 
 
-wrapper : List (Html msg) -> Html msg
-wrapper =
+wrapper : String -> List (Html msg) -> Html msg
+wrapper slug content =
     div
-        [ class "a-form__field" ]
+        [ class "a-form__field"
+        , attribute "data-form-field" slug
+        ]
+        content
 
 
 renderLabel : String -> String -> Html msg
@@ -343,7 +347,7 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, 
         pristine =
             (not << isValid model) (FormFieldTextConfig config [ NotEmpty "" ])
     in
-    wrapper
+    wrapper slug
         [ renderLabel slug label
         , Html.input
             ([ type_ "text"
@@ -383,7 +387,7 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
         pristine =
             (not << isValid model) (FormFieldTextareaConfig config [ NotEmpty "" ])
     in
-    wrapper
+    wrapper slug
         [ renderLabel slug label
         , Html.textarea
             ([ onInput (tagger << normalizeInput)
@@ -419,7 +423,7 @@ renderRadio model ({ slug, label, options, appendableHtml } as config) validatio
         valid =
             isValid model (FormFieldRadioConfig config validations)
     in
-    wrapper
+    wrapper slug
         (renderLabel slug label
             :: (List.concat << List.map (renderRadioOption model config)) options
             ++ (List.singleton
@@ -470,7 +474,7 @@ renderCheckbox model ({ reader, tagger, slug, label, isDisabled, customAttribute
         valid =
             isValid model (FormFieldCheckboxConfig config validations)
     in
-    wrapper
+    wrapper slug
         [ renderLabel slug label
         , Html.input
             ([ type_ "checkbox"
@@ -509,7 +513,7 @@ renderCheckboxWithOptions model ({ slug, label, options, appendableHtml } as con
         valid =
             isValid model (FormFieldCheckboxWithOptionsConfig config validations)
     in
-    wrapper
+    wrapper slug
         (renderLabel slug label
             :: (List.concat << List.map (renderCheckboxOption model config)) options
             ++ (List.singleton
@@ -568,7 +572,7 @@ renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisa
         pristine =
             (not << isValid model) (FormFieldSelectConfig config [ NotEmpty "" ])
     in
-    wrapper
+    wrapper slug
         [ renderLabel slug label
         , renderCustomSelect model config validations
         , Html.select
@@ -681,7 +685,7 @@ renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, set
                 , (String.left 4 << String.dropLeft 6) date
                 ]
     in
-    wrapper
+    wrapper slug
         [ renderLabel slug label
         , Html.map tagger (DatePicker.view (reader model) settings instance)
         , Html.input
@@ -741,7 +745,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 Nothing ->
                     []
     in
-    wrapper
+    wrapper slug
         [ renderLabel slug label
         , div
             [ classList
