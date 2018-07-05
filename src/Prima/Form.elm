@@ -669,12 +669,12 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
             , ( "is-touched", not pristine )
             , ( "is-disabled", isDisabled )
             ]
+        , onFocus config.onFocus
+        , onBlur config.onBlur
         ]
         [ span
             [ class "a-form__field__customSelect__status"
             , (onClick << toggleTagger << not) isOpen
-            , onFocus config.onFocus
-            , onBlur config.onBlur
             ]
             [ text currentValue
             ]
