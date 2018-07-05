@@ -83,6 +83,8 @@ type Msg
     | UpdateCheckbox FieldName Slug Bool
     | Toggle FieldName Bool
     | FetchDateToday Date
+    | Focus
+    | Blur
 
 
 main : Program Never Model Msg
@@ -189,6 +191,12 @@ update msg model =
         Toggle City isOpen ->
             { model | isOpenCity = isOpen } ! []
 
+        Focus ->
+            model ! []
+
+        Blur ->
+            model ! []
+
         _ ->
             model ! []
 
@@ -202,6 +210,8 @@ userNameConfig =
         [ minlength 3, maxlength 12 ]
         .userName
         (UpdateField UserName)
+        Focus
+        Blur
         Nothing
         [ NotEmpty "Empty value is not acceptable."
         , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .userName) "Value must be between 3 and 12 characters length."
@@ -217,6 +227,8 @@ noteConfig =
         []
         .note
         (UpdateField Note)
+        Focus
+        Blur
         Nothing
         [ NotEmpty "Empty value is not acceptable." ]
 
@@ -230,6 +242,8 @@ genderConfig =
         []
         .gender
         (UpdateField Gender)
+        Focus
+        Blur
         [ RadioOption "Male" "male"
         , RadioOption "Female" "female"
         ]
@@ -246,6 +260,8 @@ privacyConfig =
         []
         .privacy
         (UpdateFlag Privacy)
+        Focus
+        Blur
         Nothing
         []
 
@@ -259,6 +275,8 @@ visitedCountriesConfig { visitedCountries } =
         []
         (List.map (\( label, slug, checked ) -> ( slug, checked )) << .visitedCountries)
         (UpdateCheckbox VisitedCountries)
+        Focus
+        Blur
         (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) visitedCountries)
         Nothing
         []
@@ -275,6 +293,8 @@ cityConfig isOpen =
         .city
         (Toggle City)
         (UpdateField City)
+        Focus
+        Blur
         (List.sortBy .label
             [ SelectOption "Milan" "MI"
             , SelectOption "Turin" "TO"
@@ -319,6 +339,8 @@ countryConfig { countryFilter, isOpenCountry } =
         .country
         (UpdateAutocomplete Country)
         (UpdateField Country)
+        Focus
+        Blur
         ([ AutocompleteOption "Italy" "ITA"
          , AutocompleteOption "Brasil" "BRA"
          , AutocompleteOption "France" "FRA"

@@ -58,7 +58,9 @@ import Html.Attributes
         )
 import Html.Events
     exposing
-        ( onClick
+        ( onBlur
+        , onClick
+        , onFocus
         , onInput
         )
 import Regex
@@ -93,6 +95,8 @@ type alias TextConfig model msg =
     , customAttributes : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
+    , onFocus : msg
+    , onBlur : msg
     , appendableHtml : Maybe (Html msg)
     }
 
@@ -104,6 +108,8 @@ type alias TextareaConfig model msg =
     , customAttributes : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
+    , onFocus : msg
+    , onBlur : msg
     , appendableHtml : Maybe (Html msg)
     }
 
@@ -115,6 +121,8 @@ type alias RadioConfig model msg =
     , customAttributes : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
+    , onFocus : msg
+    , onBlur : msg
     , options : List RadioOption
     , appendableHtml : Maybe (Html msg)
     }
@@ -135,6 +143,8 @@ type alias CheckboxConfig model msg =
     , customAttributes : List (Attribute msg)
     , reader : model -> Bool
     , tagger : Bool -> msg
+    , onFocus : msg
+    , onBlur : msg
     , appendableHtml : Maybe (Html msg)
     }
 
@@ -146,6 +156,8 @@ type alias CheckboxWithOptionsConfig model msg =
     , customAttributes : List (Attribute msg)
     , reader : model -> List ( String, Bool )
     , tagger : String -> Bool -> msg
+    , onFocus : msg
+    , onBlur : msg
     , options : List CheckboxOption
     , appendableHtml : Maybe (Html msg)
     }
@@ -169,6 +181,8 @@ type alias SelectConfig model msg =
     , reader : model -> Maybe String
     , toggleTagger : Bool -> msg
     , optionTagger : Maybe String -> msg
+    , onFocus : msg
+    , onBlur : msg
     , options : List SelectOption
     , showEmptyOption : Bool
     , appendableHtml : Maybe (Html msg)
@@ -206,6 +220,8 @@ type alias AutocompleteConfig model msg =
     , choiceReader : model -> Maybe String
     , filterTagger : Maybe String -> msg
     , choiceTagger : Maybe String -> msg
+    , onFocus : msg
+    , onBlur : msg
     , options : List AutocompleteOption
     , appendableHtml : Maybe (Html msg)
     }
@@ -221,44 +237,44 @@ type alias AutocompleteOption =
 
 {-| Input Text configuration method.
 -}
-textConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-textConfig slug label isDisabled customAttributes reader tagger appendableHtml validations =
-    FormField <| FormFieldTextConfig (TextConfig slug label isDisabled customAttributes reader tagger appendableHtml) validations
+textConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+textConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml validations =
+    FormField <| FormFieldTextConfig (TextConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml) validations
 
 
 {-| Textarea configuration method.
 -}
-textareaConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-textareaConfig slug label isDisabled customAttributes reader tagger appendableHtml validations =
-    FormField <| FormFieldTextareaConfig (TextareaConfig slug label isDisabled customAttributes reader tagger appendableHtml) validations
+textareaConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+textareaConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml validations =
+    FormField <| FormFieldTextareaConfig (TextareaConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml) validations
 
 
 {-| Input Radio configuration method.
 -}
-radioConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> List RadioOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-radioConfig slug label isDisabled customAttributes reader tagger options appendableHtml validations =
-    FormField <| FormFieldRadioConfig (RadioConfig slug label isDisabled customAttributes reader tagger options appendableHtml) validations
+radioConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+radioConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml validations =
+    FormField <| FormFieldRadioConfig (RadioConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml) validations
 
 
 {-| Checkbox configuration method.
 -}
-checkboxConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-checkboxConfig slug label isDisabled customAttributes reader tagger appendableHtml validations =
-    FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label isDisabled customAttributes reader tagger appendableHtml) validations
+checkboxConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+checkboxConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml validations =
+    FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml) validations
 
 
 {-| Checkbox configuration method.
 -}
-checkboxWithOptionsConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> List CheckboxOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-checkboxWithOptionsConfig slug label isDisabled customAttributes reader tagger options appendableHtml validations =
-    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label isDisabled customAttributes reader tagger options appendableHtml) validations
+checkboxWithOptionsConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+checkboxWithOptionsConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml validations =
+    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml) validations
 
 
 {-| Select configuration method.
 -}
-selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> List SelectOption -> Bool -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger options showEmptyOption appendableHtml validations =
-    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger options showEmptyOption appendableHtml) validations
+selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Bool -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options showEmptyOption appendableHtml validations =
+    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options showEmptyOption appendableHtml) validations
 
 
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
@@ -277,9 +293,9 @@ datepickerConfig slug label isDisabled reader tagger datepicker datepickerSettin
 
 {-| Autocomplete configuration method.
 -}
-autocompleteConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> List AutocompleteOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-autocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger options appendableHtml validations =
-    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger options appendableHtml) validations
+autocompleteConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+autocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger onFocus onBlur options appendableHtml validations =
+    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger onFocus onBlur options appendableHtml) validations
 
 
 {-| The only available method to Render a component.
@@ -352,6 +368,8 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, 
         , Html.input
             ([ type_ "text"
              , onInput (tagger << normalizeInput)
+             , onFocus config.onFocus
+             , onBlur config.onBlur
              , (value << Maybe.withDefault "" << reader) model
              , id slug
              , name slug
@@ -391,6 +409,8 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
         [ renderLabel slug label
         , Html.textarea
             ([ onInput (tagger << normalizeInput)
+             , onFocus config.onFocus
+             , onBlur config.onBlur
              , (value << Maybe.withDefault "" << reader) model
              , id slug
              , name slug
@@ -439,7 +459,7 @@ renderRadio model ({ slug, label, options, appendableHtml } as config) validatio
 
 
 renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html msg)
-renderRadioOption model { reader, tagger, slug, label, options, isDisabled, customAttributes } option =
+renderRadioOption model ({ reader, tagger, slug, label, options, isDisabled, customAttributes } as config) option =
     let
         optionSlug =
             String.join "_" [ slug, String.toLower option.label ]
@@ -447,6 +467,8 @@ renderRadioOption model { reader, tagger, slug, label, options, isDisabled, cust
     [ Html.input
         ([ type_ "radio"
          , onInput (tagger << normalizeInput)
+         , onFocus config.onFocus
+         , onBlur config.onBlur
          , value option.slug
          , id optionSlug
          , name slug
@@ -479,6 +501,8 @@ renderCheckbox model ({ reader, tagger, slug, label, isDisabled, customAttribute
         , Html.input
             ([ type_ "checkbox"
              , (onClick << tagger << not << reader) model
+             , onFocus config.onFocus
+             , onBlur config.onBlur
              , (value << toString << reader) model
              , id slug
              , name slug
@@ -537,6 +561,8 @@ renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as 
     [ Html.input
         ([ type_ "checkbox"
          , (onClick << tagger option.slug << not) option.isChecked
+         , onFocus config.onFocus
+         , onBlur config.onBlur
          , value option.slug
          , id slug
          , name slug
@@ -577,6 +603,8 @@ renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisa
         , renderCustomSelect model config validations
         , Html.select
             ([ onInput (optionTagger << normalizeInput)
+             , onFocus config.onFocus
+             , onBlur config.onBlur
              , id slug
              , name slug
              , disabled isDisabled
@@ -645,6 +673,8 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
         [ span
             [ class "a-form__field__customSelect__status"
             , (onClick << toggleTagger << not) isOpen
+            , onFocus config.onFocus
+            , onBlur config.onBlur
             ]
             [ text currentValue
             ]
@@ -756,6 +786,8 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
             [ Html.input
                 ([ type_ "text"
                  , onInput (filterTagger << normalizeInput)
+                 , onFocus config.onFocus
+                 , onBlur config.onBlur
                  , valueAttr
                  , id slug
                  , name slug
