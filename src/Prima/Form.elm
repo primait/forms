@@ -719,7 +719,7 @@ renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, set
         [ renderLabel slug label
         , Html.map tagger (DatePicker.view (reader model) settings instance)
         , Html.input
-            [ type_ "date"
+            [ attribute "type" "date"
             , onInput (tagger << DatePicker.pick << Result.toMaybe << Date.fromString)
             , (value << Maybe.withDefault "" << Maybe.map (formatDate << settings.dateFormatter) << reader) model
             , id slug
