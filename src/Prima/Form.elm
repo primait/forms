@@ -454,7 +454,7 @@ renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html 
 renderRadioOption model ({ reader, tagger, slug, label, options, isDisabled, customAttributes } as config) option =
     let
         optionSlug =
-            String.join "_" [ slug, String.toLower option.label ]
+            (String.join "_" << List.map (String.trim << String.toLower)) [ slug, option.slug ]
     in
     [ Html.input
         ([ type_ "radio"
@@ -548,7 +548,7 @@ renderCheckboxOption : model -> CheckboxWithOptionsConfig model msg -> CheckboxO
 renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as config) option =
     let
         slug =
-            String.join "_" [ config.slug, option.slug ]
+            (String.join "_" << List.map (String.trim << String.toLower)) [ config.slug, option.slug ]
     in
     [ Html.input
         ([ type_ "checkbox"
