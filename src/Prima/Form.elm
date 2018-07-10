@@ -184,7 +184,6 @@ type alias SelectConfig model msg =
     , onFocus : msg
     , onBlur : msg
     , options : List SelectOption
-    , showEmptyOption : Bool
     , appendableHtml : Maybe (Html msg)
     }
 
@@ -272,23 +271,16 @@ checkboxWithOptionsConfig slug label isDisabled customAttributes reader tagger o
 
 {-| Select configuration method.
 -}
-selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Bool -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options showEmptyOption appendableHtml validations =
-    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options showEmptyOption appendableHtml) validations
+selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml validations =
+    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml) validations
 
 
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
 -}
 datepickerConfig : String -> String -> Bool -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker -> DatePicker.Settings -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
 datepickerConfig slug label isDisabled reader tagger datepicker datepickerSettings appendableHtml validations =
-    let
-        settings =
-            { datepickerSettings
-                | isDisabled = always isDisabled
-                , inputClassList = ( "is-disabled", isDisabled ) :: datepickerSettings.inputClassList
-            }
-    in
-    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label isDisabled reader tagger datepicker settings appendableHtml) validations
+    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label isDisabled reader tagger datepicker datepickerSettings appendableHtml) validations
 
 
 {-| Autocomplete configuration method.
@@ -584,13 +576,10 @@ renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as 
 
 
 renderSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
-renderSelect model ({ slug, label, reader, optionTagger, showEmptyOption, isDisabled, customAttributes, appendableHtml } as config) validations =
+renderSelect model ({ slug, label, reader, optionTagger, isDisabled, customAttributes, appendableHtml } as config) validations =
     let
         options =
-            if showEmptyOption then
-                SelectOption " " "" :: config.options
-            else
-                config.options
+            config.options
 
         valid =
             isValid model (FormFieldSelectConfig config validations)
@@ -714,10 +703,21 @@ renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, set
                 , (String.left 2 << String.dropLeft 3) date
                 , (String.left 4 << String.dropLeft 6) date
                 ]
+
+        datepickerSettings =
+            { settings
+                | isDisabled = always isDisabled
+                , inputClassList =
+                    [ ( "is-pristine", pristine )
+                    , ( "is-valid", valid )
+                    , ( "is-disabled", isDisabled )
+                    ]
+                        ++ settings.inputClassList
+            }
     in
     wrapper slug
         [ renderLabel slug label
-        , Html.map tagger (DatePicker.view (reader model) settings instance)
+        , Html.map tagger (DatePicker.view (reader model) datepickerSettings instance)
         , Html.input
             [ attribute "type" "date"
             , onInput (tagger << DatePicker.pick << Result.toMaybe << Date.fromString)

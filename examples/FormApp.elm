@@ -303,7 +303,6 @@ cityConfig isOpen =
             , SelectOption "Genoa" "GE"
             ]
         )
-        True
         Nothing
         [ NotEmpty "Empty value is not acceptable." ]
 
@@ -319,7 +318,7 @@ dateOfBirthConfig datepicker =
         datepicker
         datepickerSettings
         Nothing
-        []
+        [ Custom (Maybe.withDefault False << Maybe.map (\_ -> True) << .dateOfBirth) "This is not a valid date." ]
 
 
 countryConfig : Model -> FormField Model Msg
