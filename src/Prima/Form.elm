@@ -708,8 +708,10 @@ renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, set
             { settings
                 | isDisabled = always isDisabled
                 , inputClassList =
-                    [ ( "is-pristine", pristine )
-                    , ( "is-valid", valid )
+                    [ ( "is-valid", valid )
+                    , ( "is-invalid", not valid )
+                    , ( "is-pristine", pristine )
+                    , ( "is-touched", not pristine )
                     , ( "is-disabled", isDisabled )
                     ]
                         ++ settings.inputClassList
