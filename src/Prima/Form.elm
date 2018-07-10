@@ -880,6 +880,9 @@ validate model config validation =
         ( NotEmpty _, FormFieldAutocompleteConfig { choiceReader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << choiceReader) model
 
+        ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
+            (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
+
         ( Expression exp _, FormFieldTextConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
