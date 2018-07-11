@@ -289,6 +289,7 @@ cityConfig isOpen =
         "City"
         False
         isOpen
+        (Just "Seleziona")
         []
         .city
         (Toggle City)

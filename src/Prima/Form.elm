@@ -177,6 +177,7 @@ type alias SelectConfig model msg =
     , label : String
     , isDisabled : Bool
     , isOpen : Bool
+    , placeholder : Maybe String
     , customAttributes : List (Attribute msg)
     , reader : model -> Maybe String
     , toggleTagger : Bool -> msg
@@ -271,9 +272,9 @@ checkboxWithOptionsConfig slug label isDisabled customAttributes reader tagger o
 
 {-| Select configuration method.
 -}
-selectConfig : String -> String -> Bool -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-selectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml validations =
-    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml) validations
+selectConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
+selectConfig slug label isDisabled isOpen placeholder customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml validations =
+    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml) validations
 
 
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
@@ -581,7 +582,12 @@ renderSelect : model -> SelectConfig model msg -> List (Validation model) -> Htm
 renderSelect model ({ slug, label, reader, optionTagger, isDisabled, customAttributes, appendableHtml } as config) validations =
     let
         options =
-            config.options
+            case ( config.placeholder, config.isOpen ) of
+                ( Just placeholder, False ) ->
+                    SelectOption placeholder "" :: config.options
+
+                ( _, _ ) ->
+                    config.options
 
         valid =
             isValid model (FormFieldSelectConfig config validations)
@@ -635,7 +641,12 @@ renderCustomSelect : model -> SelectConfig model msg -> List (Validation model) 
 renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpen, customAttributes } as config) validations =
     let
         options =
-            config.options
+            case ( config.placeholder, isOpen ) of
+                ( Just placeholder, False ) ->
+                    SelectOption placeholder "" :: config.options
+
+                ( _, _ ) ->
+                    config.options
 
         valid =
             isValid model (FormFieldSelectConfig config validations)
