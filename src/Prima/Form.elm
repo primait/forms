@@ -458,7 +458,9 @@ renderRadioOption model ({ reader, tagger, slug, label, options, isDisabled, cus
     in
     [ Html.input
         ([ type_ "radio"
-         , onInput (tagger << normalizeInput)
+
+         {--IE 11 does not behave correctly with onInput --}
+         , (onClick << tagger << normalizeInput << .slug) option
          , onFocus config.onFocus
          , onBlur config.onBlur
          , value option.slug
