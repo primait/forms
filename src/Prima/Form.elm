@@ -351,10 +351,10 @@ renderInput : model -> TextConfig model msg -> List (Validation model) -> Html m
 renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldTextConfig config validations)
+            validate model (FormFieldTextConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldTextConfig config [ NotEmpty "" ])
+            (not << validate model) (FormFieldTextConfig config [ NotEmpty "" ])
     in
     wrapper slug
         [ renderLabel slug label
@@ -393,10 +393,10 @@ renderTextarea : model -> TextareaConfig model msg -> List (Validation model) ->
 renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldTextareaConfig config validations)
+            validate model (FormFieldTextareaConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldTextareaConfig config [ NotEmpty "" ])
+            (not << validate model) (FormFieldTextareaConfig config [ NotEmpty "" ])
     in
     wrapper slug
         [ renderLabel slug label
@@ -434,7 +434,7 @@ renderRadio : model -> RadioConfig model msg -> List (Validation model) -> Html 
 renderRadio model ({ slug, label, options, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldRadioConfig config validations)
+            validate model (FormFieldRadioConfig config validations)
     in
     wrapper slug
         (renderLabel slug label
@@ -489,7 +489,7 @@ renderCheckbox : model -> CheckboxConfig model msg -> List (Validation model) ->
 renderCheckbox model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldCheckboxConfig config validations)
+            validate model (FormFieldCheckboxConfig config validations)
     in
     wrapper slug
         [ renderLabel slug label
@@ -530,7 +530,7 @@ renderCheckboxWithOptions : model -> CheckboxWithOptionsConfig model msg -> List
 renderCheckboxWithOptions model ({ slug, label, options, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldCheckboxWithOptionsConfig config validations)
+            validate model (FormFieldCheckboxWithOptionsConfig config validations)
     in
     wrapper slug
         (renderLabel slug label
@@ -590,10 +590,10 @@ renderSelect model ({ slug, label, reader, optionTagger, isDisabled, customAttri
                     config.options
 
         valid =
-            isValid model (FormFieldSelectConfig config validations)
+            validate model (FormFieldSelectConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty "" ])
+            (not << validate model) (FormFieldSelectConfig config [ NotEmpty "" ])
     in
     wrapper slug
         [ renderLabel slug label
@@ -649,10 +649,10 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
                     config.options
 
         valid =
-            isValid model (FormFieldSelectConfig config validations)
+            validate model (FormFieldSelectConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldSelectConfig config [ NotEmpty "" ])
+            (not << validate model) (FormFieldSelectConfig config [ NotEmpty "" ])
 
         currentValue =
             options
@@ -703,10 +703,10 @@ renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model
 renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, settings, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldDatepickerConfig config validations)
+            validate model (FormFieldDatepickerConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+            (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
 
         formatDate : String -> String
         formatDate date =
@@ -764,10 +764,10 @@ renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation m
 renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagger, slug, label, isDisabled, isOpen, noResults, customAttributes, options, appendableHtml } as config) validations =
     let
         valid =
-            isValid model (FormFieldAutocompleteConfig config validations)
+            validate model (FormFieldAutocompleteConfig config validations)
 
         pristine =
-            (not << isValid model) (FormFieldAutocompleteConfig config [ NotEmpty "" ])
+            (not << validate model) (FormFieldAutocompleteConfig config [ NotEmpty "" ])
 
         valueAttr =
             case choiceReader model of
@@ -870,13 +870,45 @@ type Validation model
 
 {-| Validate a FormField.
 -}
-isValid : model -> FormFieldConfig model msg -> Bool
-isValid model opaqueConfig =
-    List.all (validate model opaqueConfig) (pickValidationRules opaqueConfig)
+isValid : model -> FormField model msg -> Bool
+isValid model (FormField opaqueConfig) =
+    validate model opaqueConfig
 
 
-validate : model -> FormFieldConfig model msg -> Validation model -> Bool
-validate model config validation =
+
+-- case opaqueConfig of
+--     FormFieldTextConfig config validations ->
+--          <| TextConfig config
+--
+--     FormFieldTextareaConfig config validations ->
+--         validate model <| TextareaConfig config
+--
+--     FormFieldRadioConfig config validations ->
+--         validate model <| RadioConfig config
+--
+--     FormFieldCheckboxConfig config validations ->
+--         validate model <| CheckboxConfig config
+--
+--     FormFieldCheckboxWithOptionsConfig config validations ->
+--         validate model <| CheckboxWithOptionsConfig config
+--
+--     FormFieldSelectConfig config validations ->
+--         validate model <| SelectConfig config
+--
+--     FormFieldDatepickerConfig config validations ->
+--         validate model <| DatepickerConfig config
+--
+--     FormFieldAutocompleteConfig config validations ->
+--         validate model <| AutocompleteConfig config
+
+
+validate : model -> FormFieldConfig model msg -> Bool
+validate model opaqueConfig =
+    List.all (validateRule model opaqueConfig) (pickValidationRules opaqueConfig)
+
+
+validateRule : model -> FormFieldConfig model msg -> Validation model -> Bool
+validateRule model config validation =
     case ( validation, config ) of
         ( NotEmpty _, FormFieldTextConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
@@ -944,7 +976,7 @@ pickError : model -> FormFieldConfig model msg -> List String
 pickError model opaqueConfig =
     List.filterMap
         (\rule ->
-            if validate model opaqueConfig rule then
+            if validateRule model opaqueConfig rule then
                 Nothing
             else
                 (Just << pickValidationError) rule
