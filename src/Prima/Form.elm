@@ -10,37 +10,56 @@ module Prima.Form
         , autocompleteConfig
         , checkboxConfig
         , checkboxWithOptionsConfig
-        , datepickerConfig
+          -- , datepickerConfig
         , isValid
+        , passwordConfig
         , radioConfig
         , render
         , selectConfig
         , textConfig
         , textareaConfig
+        , wrapper
         )
 
-{-| Components for building a form.
-@docs FormField
-@docs FormFieldConfig
-@docs Validation
-@docs autocompleteConfig
-@docs checkboxConfig
-@docs checkboxWithOptionsConfig
-@docs datepickerConfig
-@docs radioConfig
-@docs selectConfig
-@docs textConfig
-@docs textareaConfig
-@docs RadioOption
-@docs SelectOption
-@docs CheckboxOption
+{-| Package to build a Form using [Prima Assicurazioni](https://www.prima.it)'s Design System.
+
+In order to keep the configuration as simple as possible we decided to not allow
+CSS classes to be changed, also forcing consistency in our ecosystem.
+
+
+# Definition
+
+@docs FormField, FormFieldConfig, Validation
+
+
+# Basic components configuration
+
+@docs textConfig, passwordConfig, textareaConfig, checkboxConfig, CheckboxOption, checkboxWithOptionsConfig, RadioOption, radioConfig
+
+
+# Custom components configuration
+
 @docs AutocompleteOption
+@docs autocompleteConfig
+@docs SelectOption
+@docs selectConfig
+-- @docs datepickerConfig
+
+
+# Render a FormField
+
+@docs render, wrapper
+
+
+# Validate a FormField
+
 @docs isValid
-@docs render
+
 -}
 
+-- import DatePicker exposing (..)
+
 import Date exposing (Date)
-import DatePicker exposing (..)
 import Html exposing (..)
 import Html.Attributes
     exposing
@@ -79,56 +98,68 @@ Opaque implementation.
 -}
 type FormFieldConfig model msg
     = FormFieldTextConfig (TextConfig model msg) (List (Validation model))
+    | FormFieldPasswordConfig (PasswordConfig model msg) (List (Validation model))
     | FormFieldTextareaConfig (TextareaConfig model msg) (List (Validation model))
     | FormFieldRadioConfig (RadioConfig model msg) (List (Validation model))
     | FormFieldCheckboxConfig (CheckboxConfig model msg) (List (Validation model))
     | FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig model msg) (List (Validation model))
     | FormFieldSelectConfig (SelectConfig model msg) (List (Validation model))
-    | FormFieldDatepickerConfig (DatepickerConfig model msg) (List (Validation model))
+      -- | FormFieldDatepickerConfig (DatepickerConfig model msg) (List (Validation model))
     | FormFieldAutocompleteConfig (AutocompleteConfig model msg) (List (Validation model))
 
 
 type alias TextConfig model msg =
     { slug : String
     , label : String
-    , isDisabled : Bool
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
     , onFocus : msg
     , onBlur : msg
-    , appendableHtml : Maybe (Html msg)
+    }
+
+
+type alias PasswordConfig model msg =
+    { slug : String
+    , label : String
+    , attrs : List (Attribute msg)
+    , reader : model -> Maybe String
+    , tagger : Maybe String -> msg
+    , onFocus : msg
+    , onBlur : msg
     }
 
 
 type alias TextareaConfig model msg =
     { slug : String
     , label : String
-    , isDisabled : Bool
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
     , onFocus : msg
     , onBlur : msg
-    , appendableHtml : Maybe (Html msg)
     }
 
 
 type alias RadioConfig model msg =
     { slug : String
     , label : String
-    , isDisabled : Bool
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
     , onFocus : msg
     , onBlur : msg
     , options : List RadioOption
-    , appendableHtml : Maybe (Html msg)
     }
 
 
-{-| Radio's single option.
+{-| Describes an option for a Radio
+
+    [ RadioOption "Italy" "ita" True
+    , RadioOption "France" "fra" False
+    , RadioOption "Spain" "spa" True
+    ]
+
 -}
 type alias RadioOption =
     { label : String
@@ -139,31 +170,33 @@ type alias RadioOption =
 type alias CheckboxConfig model msg =
     { slug : String
     , label : String
-    , isDisabled : Bool
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , reader : model -> Bool
     , tagger : Bool -> msg
     , onFocus : msg
     , onBlur : msg
-    , appendableHtml : Maybe (Html msg)
     }
 
 
 type alias CheckboxWithOptionsConfig model msg =
     { slug : String
     , label : String
-    , isDisabled : Bool
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , reader : model -> List ( String, Bool )
     , tagger : String -> Bool -> msg
     , onFocus : msg
     , onBlur : msg
     , options : List CheckboxOption
-    , appendableHtml : Maybe (Html msg)
     }
 
 
-{-| Checkbox's single option. Can be only used with `checkboxWithOptionsConfig`.
+{-| Describes an option for a Checkbox
+
+    [ CheckboxOption "Italy" "ita" True
+    , CheckboxOption "France" "fra" False
+    , CheckboxOption "Spain" "spa" True
+    ]
+
 -}
 type alias CheckboxOption =
     { label : String
@@ -178,18 +211,22 @@ type alias SelectConfig model msg =
     , isDisabled : Bool
     , isOpen : Bool
     , placeholder : Maybe String
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , toggleTagger : Bool -> msg
     , optionTagger : Maybe String -> msg
     , onFocus : msg
     , onBlur : msg
     , options : List SelectOption
-    , appendableHtml : Maybe (Html msg)
     }
 
 
-{-| Select's single option.
+{-| Describes an option for a Select
+
+    [ SelectOption "Italy" "ita"
+    , SelectOption "France" "fra"
+    ]
+
 -}
 type alias SelectOption =
     { label : String
@@ -197,25 +234,23 @@ type alias SelectOption =
     }
 
 
-type alias DatepickerConfig model msg =
-    { slug : String
-    , label : String
-    , isDisabled : Bool
-    , reader : model -> Maybe Date
-    , tagger : DatePicker.Msg -> msg
-    , instance : DatePicker
-    , settings : DatePicker.Settings
-    , appendableHtml : Maybe (Html msg)
-    }
+
+-- type alias DatepickerConfig model msg =
+--     { slug : String
+--     , label : String
+--     , reader : model -> Maybe Date
+--     , tagger : DatePicker.Msg -> msg
+--     , instance : DatePicker
+--     , settings : DatePicker.Settings
+--     }
 
 
 type alias AutocompleteConfig model msg =
     { slug : String
     , label : String
-    , isDisabled : Bool
     , isOpen : Bool
     , noResults : Maybe String
-    , customAttributes : List (Attribute msg)
+    , attrs : List (Attribute msg)
     , filterReader : model -> Maybe String
     , choiceReader : model -> Maybe String
     , filterTagger : Maybe String -> msg
@@ -223,11 +258,15 @@ type alias AutocompleteConfig model msg =
     , onFocus : msg
     , onBlur : msg
     , options : List AutocompleteOption
-    , appendableHtml : Maybe (Html msg)
     }
 
 
-{-| Autocomplete's single option.
+{-| Describes an option for an Autocomplete
+
+    [ AutocompleteOption "Italy" "ita"
+    , AutocompleteOption "France" "fra"
+    ]
+
 -}
 type alias AutocompleteOption =
     { label : String
@@ -236,68 +275,270 @@ type alias AutocompleteOption =
 
 
 {-| Input Text configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnInputUsername (Maybe String)
+        | OnFocusUsername
+        | OnBlurUsername
+        ...
+
+    type alias Model =
+        { username : Maybe String
+        ...
+        }
+
+    usernameConfig : FormField Model Msg
+    usernameConfig  =
+        textConfig
+            "username"
+            "Username:"
+            [ minlength 3, maxlength 12, disabled False ]
+            .username
+            OnInputUsername
+            OnFocusUsername
+            OnBlurUsername
+            [ NotEmpty "Empty value is not acceptable."
+            , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .username) "Value must be between 3 and 12 characters length."
+            ]
+
 -}
-textConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-textConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml validations =
-    FormField <| FormFieldTextConfig (TextConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml) validations
+textConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List (Validation model) -> FormField model msg
+textConfig slug label attrs reader tagger onFocus onBlur validations =
+    FormField <| FormFieldTextConfig (TextConfig slug label attrs reader tagger onFocus onBlur) validations
 
 
-{-| Textarea configuration method.
+{-| Input password configuration method. See `textConfig` for configuration options.
 -}
-textareaConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-textareaConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml validations =
-    FormField <| FormFieldTextareaConfig (TextareaConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml) validations
+passwordConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List (Validation model) -> FormField model msg
+passwordConfig slug label attrs reader tagger onFocus onBlur validations =
+    FormField <| FormFieldPasswordConfig (PasswordConfig slug label attrs reader tagger onFocus onBlur) validations
+
+
+{-| Textarea configuration method. See `textConfig` for configuration options.
+-}
+textareaConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List (Validation model) -> FormField model msg
+textareaConfig slug label attrs reader tagger onFocus onBlur validations =
+    FormField <| FormFieldTextareaConfig (TextareaConfig slug label attrs reader tagger onFocus onBlur) validations
 
 
 {-| Input Radio configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnChangeGender (Maybe String)
+        | OnFocusGender
+        | OnBlurGender
+        ...
+
+    type alias Model =
+        { gender : Maybe String
+        ...
+        }
+
+    genderConfig : FormField Model Msg
+    genderConfig =
+        Form.radioConfig
+            "gender"
+            "Gender"
+            []
+            .gender
+            OnChangeGender
+            OnFocusGender
+            OnBlurGender
+            [ RadioOption "Male" "male" , RadioOption "Female" "female" ]
+            [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
+
 -}
-radioConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-radioConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml validations =
-    FormField <| FormFieldRadioConfig (RadioConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml) validations
+radioConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> List (Validation model) -> FormField model msg
+radioConfig slug label attrs reader tagger onFocus onBlur options validations =
+    FormField <| FormFieldRadioConfig (RadioConfig slug label attrs reader tagger onFocus onBlur options) validations
 
 
-{-| Checkbox configuration method.
+{-| Checkbox with single option configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnChangePrivacy Bool
+        | OnFocusPrivacy
+        | OnBlurPrivacy
+        ...
+
+    type alias Model =
+        { privacy : Bool
+        ...
+        }
+
+    ...
+    acceptPrivacyConfig : FormField Model Msg
+    acceptPrivacyConfig =
+        Form.checkboxConfig
+            "privacy"
+            "Do you accept our Privacy Policy?"
+            []
+            .privacy
+            OnChangePrivacy
+            OnFocusPrivacy
+            OnBlurPrivacy
+            []
+
 -}
-checkboxConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-checkboxConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml validations =
-    FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label isDisabled customAttributes reader tagger onFocus onBlur appendableHtml) validations
+checkboxConfig : String -> String -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> List (Validation model) -> FormField model msg
+checkboxConfig slug label attrs reader tagger onFocus onBlur validations =
+    FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label attrs reader tagger onFocus onBlur) validations
 
 
-{-| Checkbox configuration method.
+{-| Checkbox with multiple option configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnChangeVisitedCountries String Bool
+        | OnFocusVisitedCountries
+        | OnBlurVisitedCountries
+        ...
+
+    type alias Model =
+        { visitedCountries : List (String, String, Bool)
+        ...
+        }
+
+    ...
+    visitedCountriesConfig : List ( String, String, Bool ) -> FormField Model Msg
+    visitedCountriesConfig options =
+        Form.checkboxWithOptionsConfig
+            "visited_countries"
+            "Visited countries"
+            []
+            (List.map (\( label, slug, checked ) -> ( slug, checked )) << .visitedCountries)
+            OnChangeVisitedCountries
+            OnFocusVisitedCountries
+            OnBlurVisitedCountries
+            (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) options)
+            []
+
 -}
-checkboxWithOptionsConfig : String -> String -> Bool -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-checkboxWithOptionsConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml validations =
-    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label isDisabled customAttributes reader tagger onFocus onBlur options appendableHtml) validations
+checkboxWithOptionsConfig : String -> String -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> List (Validation model) -> FormField model msg
+checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options validations =
+    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options) validations
 
 
 {-| Select configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnChangeCity (Maybe String)
+        | OnFocusCity
+        | OnBlurCity
+        | ToggleCity
+        ...
+
+    type alias Model =
+        { city : Maybe String
+        , isOpenCitySelect : Bool
+        ...
+        }
+
+    ...
+
+    cityConfig : Bool -> FormField Model Msg
+    cityConfig isOpenCitySelect =
+        Form.selectConfig
+            "city"
+            "City"
+            False
+            isOpenCitySelect
+            (Just "Select any option")
+            []
+            .city
+            ToggleCity
+            OnChangeCity
+            OnFocusCity
+            OnBlurCity
+            (List.sortBy .label [ SelectOption "Milan" "MI" , SelectOption "Turin" "TO" , SelectOption "Rome" "RO" , SelectOption "Naples" "NA" , SelectOption "Genoa" "GE" ] )
+            [ NotEmpty "Empty value is not acceptable." ]
+
 -}
-selectConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-selectConfig slug label isDisabled isOpen placeholder customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml validations =
-    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder customAttributes reader toggleTagger optionTagger onFocus onBlur options appendableHtml) validations
+selectConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> List (Validation model) -> FormField model msg
+selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options validations =
+    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options) validations
 
 
-{-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
--}
-datepickerConfig : String -> String -> Bool -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker -> DatePicker.Settings -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-datepickerConfig slug label isDisabled reader tagger datepicker datepickerSettings appendableHtml validations =
-    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label isDisabled reader tagger datepicker datepickerSettings appendableHtml) validations
+
+-- {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
+-- -}
+-- datepickerConfig : String -> String -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker -> DatePicker.Settings -> List (Validation model) -> FormField model msg
+-- datepickerConfig slug label reader tagger datepicker datepickerSettings validations =
+--     FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label reader tagger datepicker datepickerSettings) validations
 
 
 {-| Autocomplete configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnSelectCountry (Maybe String)
+        | OnFilterCountry (Maybe String)
+        | OnFocusCountry
+        | OnBlurCountry
+        ...
+
+    type alias Model =
+        { country : Maybe String
+        , countryFilter : Maybe String
+        , isOpenCountryAutocomplete: Bool
+        ...
+        }
+
+    ...
+
+    countryConfig : Bool -> Maybe String -> FormField Model Msg
+    countryConfig isOpenCountryAutocomplete countryFilter =
+        let
+            lowerFilter =
+                (String.toLower << Maybe.withDefault "") countryFilter
+        in
+        Form.autocompleteConfig
+            "country"
+            "Country"
+            isOpenCountry
+            (Just "No results")
+            []
+            .countryFilter
+            .country
+            OnFilterCountry
+            OnSelectCountry
+            OnFocusCountry
+            OnBlurCountry
+            (List.filter (String.contains lowerFilter << String.toLower << .label) <| [ AutocompleteOption "Italy" "ITA", AutocompleteOption "Brasil" "BRA", AutocompleteOption "France" "FRA", AutocompleteOption "England" "ENG", AutocompleteOption "USA" "USA", AutocompleteOption "Japan" "JAP" ])
+            [ NotEmpty "Empty value is not acceptable." ]
+
 -}
-autocompleteConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> Maybe (Html msg) -> List (Validation model) -> FormField model msg
-autocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger onFocus onBlur options appendableHtml validations =
-    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isDisabled isOpen noResults customAttributes filterReader choiceReader filterTagger choiceTagger onFocus onBlur options appendableHtml) validations
+autocompleteConfig : String -> String -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> List (Validation model) -> FormField model msg
+autocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options validations =
+    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options) validations
 
 
-{-| The only available method to Render a component.
+{-| Method for rendering a `FormField`
 -}
-render : model -> FormField model msg -> Html msg
+render : model -> FormField model msg -> List (Html msg)
 render model (FormField opaqueConfig) =
     case opaqueConfig of
         FormFieldTextConfig config validation ->
             renderInput model config validation
+
+        FormFieldPasswordConfig config validation ->
+            renderPassword model config validation
 
         FormFieldTextareaConfig config validation ->
             renderTextarea model config validation
@@ -314,18 +555,18 @@ render model (FormField opaqueConfig) =
         FormFieldSelectConfig config validation ->
             renderSelect model config validation
 
-        FormFieldDatepickerConfig config validation ->
-            renderDatepicker model config validation
-
+        -- FormFieldDatepickerConfig config validation ->
+        --     renderDatepicker model config validation
         FormFieldAutocompleteConfig config validation ->
             renderAutocomplete model config validation
 
 
-wrapper : String -> List (Html msg) -> Html msg
-wrapper slug content =
+{-| Wrapper for a FormField rendered with `render` function.
+-}
+wrapper : List (Html msg) -> Html msg
+wrapper content =
     div
         [ class "a-form__field"
-        , attribute "data-form-field" slug
         ]
         content
 
@@ -347,8 +588,8 @@ renderError error =
         [ text error ]
 
 
-renderInput : model -> TextConfig model msg -> List (Validation model) -> Html msg
-renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
+renderInput : model -> TextConfig model msg -> List (Validation model) -> List (Html msg)
+renderInput model ({ reader, tagger, slug, label, attrs } as config) validations =
     let
         valid =
             validate model (FormFieldTextConfig config validations)
@@ -356,41 +597,77 @@ renderInput model ({ reader, tagger, slug, label, isDisabled, customAttributes, 
         pristine =
             (not << validate model) (FormFieldTextConfig config [ NotEmpty "" ])
     in
-    wrapper slug
-        [ renderLabel slug label
-        , Html.input
-            ([ type_ "text"
-             , onInput (tagger << normalizeInput)
-             , onFocus config.onFocus
-             , onBlur config.onBlur
-             , (value << Maybe.withDefault "" << reader) model
-             , id slug
-             , name slug
-             , disabled isDisabled
-             , classList
-                [ ( "a-form__field__input", True )
-                , ( "is-valid", valid )
-                , ( "is-invalid", not valid )
-                , ( "is-pristine", pristine )
-                , ( "is-touched", not pristine )
-                ]
-             ]
-                ++ customAttributes
-            )
-            []
-        , (renderIf (not valid && not pristine)
-            << renderError
-            << String.join " "
-            << pickError model
-            << FormFieldTextConfig config
-          )
-            validations
-        , renderExtraHtml appendableHtml
-        ]
+    [ renderLabel slug label
+    , Html.input
+        ([ type_ "text"
+         , onInput (tagger << normalizeInput)
+         , onFocus config.onFocus
+         , onBlur config.onBlur
+         , (value << Maybe.withDefault "" << reader) model
+         , id slug
+         , name slug
+         , classList
+            [ ( "a-form__field__input", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            ]
+         ]
+            ++ attrs
+        )
+        []
+    , (renderIf (not valid && not pristine)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldTextConfig config
+      )
+        validations
+    ]
 
 
-renderTextarea : model -> TextareaConfig model msg -> List (Validation model) -> Html msg
-renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
+renderPassword : model -> PasswordConfig model msg -> List (Validation model) -> List (Html msg)
+renderPassword model ({ reader, tagger, slug, label, attrs } as config) validations =
+    let
+        valid =
+            validate model (FormFieldPasswordConfig config validations)
+
+        pristine =
+            (not << validate model) (FormFieldPasswordConfig config [ NotEmpty "" ])
+    in
+    [ renderLabel slug label
+    , Html.input
+        ([ type_ "password"
+         , onInput (tagger << normalizeInput)
+         , onFocus config.onFocus
+         , onBlur config.onBlur
+         , (value << Maybe.withDefault "" << reader) model
+         , id slug
+         , name slug
+         , classList
+            [ ( "a-form__field__input", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            ]
+         ]
+            ++ attrs
+        )
+        []
+    , (renderIf (not valid && not pristine)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldPasswordConfig config
+      )
+        validations
+    ]
+
+
+renderTextarea : model -> TextareaConfig model msg -> List (Validation model) -> List (Html msg)
+renderTextarea model ({ reader, tagger, slug, label, attrs } as config) validations =
     let
         valid =
             validate model (FormFieldTextareaConfig config validations)
@@ -398,61 +675,55 @@ renderTextarea model ({ reader, tagger, slug, label, isDisabled, customAttribute
         pristine =
             (not << validate model) (FormFieldTextareaConfig config [ NotEmpty "" ])
     in
-    wrapper slug
-        [ renderLabel slug label
-        , Html.textarea
-            ([ onInput (tagger << normalizeInput)
-             , onFocus config.onFocus
-             , onBlur config.onBlur
-             , (value << Maybe.withDefault "" << reader) model
-             , id slug
-             , name slug
-             , disabled isDisabled
-             , classList
-                [ ( "a-form__field__textarea", True )
-                , ( "is-valid", valid )
-                , ( "is-invalid", not valid )
-                , ( "is-pristine", pristine )
-                , ( "is-touched", not pristine )
-                ]
-             ]
-                ++ customAttributes
-            )
-            []
-        , (renderIf (not valid && not pristine)
-            << renderError
-            << String.join " "
-            << pickError model
-            << FormFieldTextareaConfig config
-          )
-            validations
-        , renderExtraHtml appendableHtml
-        ]
+    [ renderLabel slug label
+    , Html.textarea
+        ([ onInput (tagger << normalizeInput)
+         , onFocus config.onFocus
+         , onBlur config.onBlur
+         , (value << Maybe.withDefault "" << reader) model
+         , id slug
+         , name slug
+         , classList
+            [ ( "a-form__field__textarea", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            ]
+         ]
+            ++ attrs
+        )
+        []
+    , (renderIf (not valid && not pristine)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldTextareaConfig config
+      )
+        validations
+    ]
 
 
-renderRadio : model -> RadioConfig model msg -> List (Validation model) -> Html msg
-renderRadio model ({ slug, label, options, appendableHtml } as config) validations =
+renderRadio : model -> RadioConfig model msg -> List (Validation model) -> List (Html msg)
+renderRadio model ({ slug, label, options } as config) validations =
     let
         valid =
             validate model (FormFieldRadioConfig config validations)
     in
-    wrapper slug
-        (renderLabel slug label
-            :: (List.concat << List.map (renderRadioOption model config)) options
-            ++ (List.singleton
-                    << renderIf (not valid)
-                    << renderError
-                    << String.join " "
-                    << pickError model
-                    << FormFieldRadioConfig config
-               )
-                validations
-            ++ (List.singleton << renderExtraHtml) appendableHtml
-        )
+    renderLabel slug label
+        :: (List.concat << List.map (renderRadioOption model config)) options
+        ++ (List.singleton
+                << renderIf (not valid)
+                << renderError
+                << String.join " "
+                << pickError model
+                << FormFieldRadioConfig config
+           )
+            validations
 
 
 renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html msg)
-renderRadioOption model ({ reader, tagger, slug, label, options, isDisabled, customAttributes } as config) option =
+renderRadioOption model ({ reader, tagger, slug, label, options, attrs } as config) option =
     let
         optionSlug =
             (String.join "_" << List.map (String.trim << String.toLower)) [ slug, option.slug ]
@@ -468,12 +739,11 @@ renderRadioOption model ({ reader, tagger, slug, label, options, isDisabled, cus
          , id optionSlug
          , name slug
          , (checked << (==) option.slug << Maybe.withDefault "" << reader) model
-         , disabled isDisabled
          , classList
             [ ( "a-form__field__radio", True )
             ]
          ]
-            ++ customAttributes
+            ++ attrs
         )
         []
     , Html.label
@@ -485,70 +755,64 @@ renderRadioOption model ({ reader, tagger, slug, label, options, isDisabled, cus
     ]
 
 
-renderCheckbox : model -> CheckboxConfig model msg -> List (Validation model) -> Html msg
-renderCheckbox model ({ reader, tagger, slug, label, isDisabled, customAttributes, appendableHtml } as config) validations =
+renderCheckbox : model -> CheckboxConfig model msg -> List (Validation model) -> List (Html msg)
+renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validations =
     let
         valid =
             validate model (FormFieldCheckboxConfig config validations)
     in
-    wrapper slug
-        [ renderLabel slug label
-        , Html.input
-            ([ type_ "checkbox"
-             , (onClick << tagger << not << reader) model
-             , onFocus config.onFocus
-             , onBlur config.onBlur
-             , (value << toString << reader) model
-             , id slug
-             , name slug
-             , disabled isDisabled
-             , classList
-                [ ( "a-form__field__checkbox", True )
-                ]
-             ]
-                ++ customAttributes
-            )
-            []
-        , Html.label
-            [ for slug
-            , class "a-form__field__checkbox__label"
+    [ renderLabel slug label
+    , Html.input
+        ([ type_ "checkbox"
+         , (onClick << tagger << not << reader) model
+         , onFocus config.onFocus
+         , onBlur config.onBlur
+         , (value << toString << reader) model
+         , id slug
+         , name slug
+         , classList
+            [ ( "a-form__field__checkbox", True )
             ]
-            [ text " "
-            ]
-        , (renderIf (not valid)
-            << renderError
-            << String.join " "
-            << pickError model
-            << FormFieldCheckboxConfig config
-          )
-            validations
-        , renderExtraHtml appendableHtml
+         ]
+            ++ attrs
+        )
+        []
+    , Html.label
+        [ for slug
+        , class "a-form__field__checkbox__label"
         ]
+        [ text " "
+        ]
+    , (renderIf (not valid)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldCheckboxConfig config
+      )
+        validations
+    ]
 
 
-renderCheckboxWithOptions : model -> CheckboxWithOptionsConfig model msg -> List (Validation model) -> Html msg
-renderCheckboxWithOptions model ({ slug, label, options, appendableHtml } as config) validations =
+renderCheckboxWithOptions : model -> CheckboxWithOptionsConfig model msg -> List (Validation model) -> List (Html msg)
+renderCheckboxWithOptions model ({ slug, label, options } as config) validations =
     let
         valid =
             validate model (FormFieldCheckboxWithOptionsConfig config validations)
     in
-    wrapper slug
-        (renderLabel slug label
-            :: (List.concat << List.map (renderCheckboxOption model config)) options
-            ++ (List.singleton
-                    << renderIf (not valid)
-                    << renderError
-                    << String.join " "
-                    << pickError model
-                    << FormFieldCheckboxWithOptionsConfig config
-               )
-                validations
-            ++ (List.singleton << renderExtraHtml) appendableHtml
-        )
+    renderLabel slug label
+        :: (List.concat << List.map (renderCheckboxOption model config)) options
+        ++ (List.singleton
+                << renderIf (not valid)
+                << renderError
+                << String.join " "
+                << pickError model
+                << FormFieldCheckboxWithOptionsConfig config
+           )
+            validations
 
 
 renderCheckboxOption : model -> CheckboxWithOptionsConfig model msg -> CheckboxOption -> List (Html msg)
-renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as config) option =
+renderCheckboxOption model ({ reader, tagger, attrs } as config) option =
     let
         slug =
             (String.join "_" << List.map (String.trim << String.toLower)) [ config.slug, option.slug ]
@@ -561,12 +825,11 @@ renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as 
          , value option.slug
          , id slug
          , name slug
-         , disabled isDisabled
          , classList
             [ ( "a-form__field__checkbox", True )
             ]
          ]
-            ++ customAttributes
+            ++ attrs
         )
         []
     , Html.label
@@ -578,8 +841,8 @@ renderCheckboxOption model ({ reader, tagger, isDisabled, customAttributes } as 
     ]
 
 
-renderSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
-renderSelect model ({ slug, label, reader, optionTagger, isDisabled, customAttributes, appendableHtml } as config) validations =
+renderSelect : model -> SelectConfig model msg -> List (Validation model) -> List (Html msg)
+renderSelect model ({ slug, label, reader, optionTagger, attrs } as config) validations =
     let
         options =
             case ( config.placeholder, config.isOpen ) of
@@ -595,36 +858,33 @@ renderSelect model ({ slug, label, reader, optionTagger, isDisabled, customAttri
         pristine =
             (not << validate model) (FormFieldSelectConfig config [ NotEmpty "" ])
     in
-    wrapper slug
-        [ renderLabel slug label
-        , renderCustomSelect model config validations
-        , Html.select
-            ([ onInput (optionTagger << normalizeInput)
-             , onFocus config.onFocus
-             , onBlur config.onBlur
-             , id slug
-             , name slug
-             , disabled isDisabled
-             , classList
-                [ ( "a-form__field__select", True )
-                , ( "is-valid", valid )
-                , ( "is-invalid", not valid )
-                , ( "is-pristine", pristine )
-                , ( "is-touched", not pristine )
-                ]
-             ]
-                ++ customAttributes
-            )
-            (List.map (renderSelectOption model config) options)
-        , (renderIf (not valid && not pristine)
-            << renderError
-            << String.join " "
-            << pickError model
-            << FormFieldSelectConfig config
-          )
-            validations
-        , renderExtraHtml appendableHtml
-        ]
+    [ renderLabel slug label
+    , renderCustomSelect model config validations
+    , Html.select
+        ([ onInput (optionTagger << normalizeInput)
+         , onFocus config.onFocus
+         , onBlur config.onBlur
+         , id slug
+         , name slug
+         , classList
+            [ ( "a-form__field__select", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            ]
+         ]
+            ++ attrs
+        )
+        (List.map (renderSelectOption model config) options)
+    , (renderIf (not valid && not pristine)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldSelectConfig config
+      )
+        validations
+    ]
 
 
 renderSelectOption : model -> SelectConfig model msg -> SelectOption -> Html msg
@@ -638,7 +898,7 @@ renderSelectOption model { reader, slug, label } option =
 
 
 renderCustomSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
-renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpen, customAttributes } as config) validations =
+renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpen, attrs } as config) validations =
     let
         options =
             case ( config.placeholder, isOpen ) of
@@ -699,69 +959,71 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } option =
         ]
 
 
-renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> Html msg
-renderDatepicker model ({ reader, tagger, slug, label, isDisabled, instance, settings, appendableHtml } as config) validations =
-    let
-        valid =
-            validate model (FormFieldDatepickerConfig config validations)
 
-        pristine =
-            (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+-- renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> List (Html msg)
+-- renderDatepicker model ({ reader, tagger, slug, label, instance, settings } as config) validations =
+--     []
+-- let
+--     valid =
+--         validate model (FormFieldDatepickerConfig config validations)
+--
+--     pristine =
+--         (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+--
+--     formatDate : String -> String
+--     formatDate date =
+--         -- From dd/mm/yyyy to yyyy-mm-dd which is required by input[type="date"]
+--         (String.join "-" << List.reverse)
+--             [ String.left 2 date
+--             , (String.left 2 << String.dropLeft 3) date
+--             , (String.left 4 << String.dropLeft 6) date
+--             ]
+--
+--     datepickerSettings =
+--         { settings
+--             | isDisabled = always isDisabled
+--             , inputClassList =
+--                 [ ( "is-valid", valid )
+--                 , ( "is-invalid", not valid )
+--                 , ( "is-pristine", pristine )
+--                 , ( "is-touched", not pristine )
+--                 , ( "is-disabled", isDisabled )
+--                 ]
+--                     ++ settings.inputClassList
+--         }
+-- in
+--
+--     [ renderLabel slug label
+--     , Html.map tagger (DatePicker.view (reader model) datepickerSettings instance)
+--     , Html.input
+--         [ attribute "type" "date"
+--         , onInput (tagger << DatePicker.pick << Result.toMaybe << Date.fromString)
+--         , (value << Maybe.withDefault "" << Maybe.map (formatDate << settings.dateFormatter) << reader) model
+--         , id slug
+--         , name slug
+--
+--         , classList
+--             [ ( "a-form__field__date", True )
+--             , ( "is-valid", valid )
+--             , ( "is-invalid", not valid )
+--             , ( "is-pristine", pristine )
+--             , ( "is-touched", not pristine )
+--             ]
+--         ]
+--         []
+--     , (renderIf (not valid && not pristine)
+--         << renderError
+--         << String.join " "
+--         << pickError model
+--         << FormFieldDatepickerConfig config
+--       )
+--         validations
+--
+--     ]
 
-        formatDate : String -> String
-        formatDate date =
-            -- From dd/mm/yyyy to yyyy-mm-dd which is required by input[type="date"]
-            (String.join "-" << List.reverse)
-                [ String.left 2 date
-                , (String.left 2 << String.dropLeft 3) date
-                , (String.left 4 << String.dropLeft 6) date
-                ]
 
-        datepickerSettings =
-            { settings
-                | isDisabled = always isDisabled
-                , inputClassList =
-                    [ ( "is-valid", valid )
-                    , ( "is-invalid", not valid )
-                    , ( "is-pristine", pristine )
-                    , ( "is-touched", not pristine )
-                    , ( "is-disabled", isDisabled )
-                    ]
-                        ++ settings.inputClassList
-            }
-    in
-    wrapper slug
-        [ renderLabel slug label
-        , Html.map tagger (DatePicker.view (reader model) datepickerSettings instance)
-        , Html.input
-            [ attribute "type" "date"
-            , onInput (tagger << DatePicker.pick << Result.toMaybe << Date.fromString)
-            , (value << Maybe.withDefault "" << Maybe.map (formatDate << settings.dateFormatter) << reader) model
-            , id slug
-            , name slug
-            , disabled isDisabled
-            , classList
-                [ ( "a-form__field__date", True )
-                , ( "is-valid", valid )
-                , ( "is-invalid", not valid )
-                , ( "is-pristine", pristine )
-                , ( "is-touched", not pristine )
-                ]
-            ]
-            []
-        , (renderIf (not valid && not pristine)
-            << renderError
-            << String.join " "
-            << pickError model
-            << FormFieldDatepickerConfig config
-          )
-            validations
-        , renderExtraHtml appendableHtml
-        ]
-
-
-renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> Html msg
-renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagger, slug, label, isDisabled, isOpen, noResults, customAttributes, options, appendableHtml } as config) validations =
+renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> List (Html msg)
+renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagger, slug, label, isOpen, noResults, attrs, options } as config) validations =
     let
         valid =
             validate model (FormFieldAutocompleteConfig config validations)
@@ -790,52 +1052,49 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 Nothing ->
                     []
     in
-    wrapper slug
-        [ renderLabel slug label
-        , div
-            [ classList
-                [ ( "a-form__field__autocomplete", True )
-                , ( "is-open", isOpen )
-                ]
+    [ renderLabel slug label
+    , div
+        [ classList
+            [ ( "a-form__field__autocomplete", True )
+            , ( "is-open", isOpen )
             ]
-            [ Html.input
-                ([ type_ "text"
-                 , onInput (filterTagger << normalizeInput)
-                 , onFocus config.onFocus
-                 , onBlur config.onBlur
-                 , valueAttr
-                 , id slug
-                 , name slug
-                 , disabled isDisabled
-                 , classList
-                    [ ( "a-form__field__input", True )
-                    , ( "is-valid", valid )
-                    , ( "is-invalid", not valid )
-                    , ( "is-pristine", pristine )
-                    , ( "is-touched", not pristine )
-                    ]
-                 ]
-                    ++ customAttributes
-                    ++ clickAttr
-                )
-                []
-            , ul
-                [ class "a-form__field__autocomplete__list" ]
-                (if List.length options > 0 then
-                    List.map (renderAutocompleteOption model config) options
-                 else
-                    (List.singleton << renderAutocompleteNoResults model) config
-                )
-            ]
-        , (renderIf (not valid && not pristine)
-            << renderError
-            << String.join " "
-            << pickError model
-            << FormFieldAutocompleteConfig config
-          )
-            validations
-        , renderExtraHtml appendableHtml
         ]
+        [ Html.input
+            ([ type_ "text"
+             , onInput (filterTagger << normalizeInput)
+             , onFocus config.onFocus
+             , onBlur config.onBlur
+             , valueAttr
+             , id slug
+             , name slug
+             , classList
+                [ ( "a-form__field__input", True )
+                , ( "is-valid", valid )
+                , ( "is-invalid", not valid )
+                , ( "is-pristine", pristine )
+                , ( "is-touched", not pristine )
+                ]
+             ]
+                ++ attrs
+                ++ clickAttr
+            )
+            []
+        , ul
+            [ class "a-form__field__autocomplete__list" ]
+            (if List.length options > 0 then
+                List.map (renderAutocompleteOption model config) options
+             else
+                (List.singleton << renderAutocompleteNoResults model) config
+            )
+        ]
+    , (renderIf (not valid && not pristine)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldAutocompleteConfig config
+      )
+        validations
+    ]
 
 
 renderAutocompleteOption : model -> AutocompleteConfig model msg -> AutocompleteOption -> Html msg
@@ -861,6 +1120,11 @@ renderAutocompleteNoResults model { noResults } =
 
 
 {-| Validation rules for a FormField.
+
+    NotEmpty "This field cannot be empty."
+    Expression (Regex.regex "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$") "Insert a valid email."
+    Custom (\model -> always True) "This error message will never be shown."
+
 -}
 type Validation model
     = NotEmpty String
@@ -868,38 +1132,14 @@ type Validation model
     | Custom (model -> Bool) String
 
 
-{-| Validate a FormField.
+{-| Validate a `FormField`.
+
+    isValid model usernameConfig
+
 -}
 isValid : model -> FormField model msg -> Bool
 isValid model (FormField opaqueConfig) =
     validate model opaqueConfig
-
-
-
--- case opaqueConfig of
---     FormFieldTextConfig config validations ->
---          <| TextConfig config
---
---     FormFieldTextareaConfig config validations ->
---         validate model <| TextareaConfig config
---
---     FormFieldRadioConfig config validations ->
---         validate model <| RadioConfig config
---
---     FormFieldCheckboxConfig config validations ->
---         validate model <| CheckboxConfig config
---
---     FormFieldCheckboxWithOptionsConfig config validations ->
---         validate model <| CheckboxWithOptionsConfig config
---
---     FormFieldSelectConfig config validations ->
---         validate model <| SelectConfig config
---
---     FormFieldDatepickerConfig config validations ->
---         validate model <| DatepickerConfig config
---
---     FormFieldAutocompleteConfig config validations ->
---         validate model <| AutocompleteConfig config
 
 
 validate : model -> FormFieldConfig model msg -> Bool
@@ -925,9 +1165,8 @@ validateRule model config validation =
         ( NotEmpty _, FormFieldAutocompleteConfig { choiceReader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << choiceReader) model
 
-        ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
-            (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
-
+        -- ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
+        --     (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
         ( Expression exp _, FormFieldTextConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
@@ -950,6 +1189,9 @@ pickValidationRules opaqueConfig =
         FormFieldTextConfig _ validations ->
             validations
 
+        FormFieldPasswordConfig _ validations ->
+            validations
+
         FormFieldTextareaConfig _ validations ->
             validations
 
@@ -965,9 +1207,8 @@ pickValidationRules opaqueConfig =
         FormFieldCheckboxWithOptionsConfig _ validations ->
             validations
 
-        FormFieldDatepickerConfig _ validations ->
-            validations
-
+        -- FormFieldDatepickerConfig _ validations ->
+        --     validations
         FormFieldAutocompleteConfig _ validations ->
             validations
 
@@ -995,16 +1236,6 @@ pickValidationError rule =
 
         Custom customRule error ->
             error
-
-
-renderExtraHtml : Maybe (Html msg) -> Html msg
-renderExtraHtml maybeHtml =
-    case maybeHtml of
-        Just html ->
-            html
-
-        Nothing ->
-            text ""
 
 
 normalizeInput : String -> Maybe String

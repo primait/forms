@@ -1,8 +1,9 @@
 module FormApp exposing (..)
 
+-- import DatePicker exposing (DatePicker)
+
 import Date exposing (Date, Day(..), Month(..))
 import Date.Format
-import DatePicker exposing (DatePicker)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Prima.Form as Form
@@ -20,14 +21,16 @@ import Tuple
 
 
 type alias Model =
-    { userName : Maybe String
+    { username : Maybe String
+    , password : Maybe String
     , note : Maybe String
     , gender : Maybe String
     , city : Maybe String
     , isOpenCity : Bool
     , privacy : Bool
     , dateOfBirth : Maybe Date
-    , dateOfBirthDP : Maybe DatePicker
+
+    -- , dateOfBirthDP : Maybe DatePicker
     , country : Maybe String
     , countryFilter : Maybe String
     , isOpenCountry : Bool
@@ -50,11 +53,12 @@ initialModel =
         Nothing
         Nothing
         Nothing
+        Nothing
         False
         False
         Nothing
         Nothing
-        Nothing
+        -- Nothing
         Nothing
         False
         [ ( "Italy", "ITA", False )
@@ -67,7 +71,8 @@ initialModel =
 type FieldName
     = Privacy
     | Gender
-    | UserName
+    | Username
+    | Password
     | City
     | DateOfBirth
     | Country
@@ -78,7 +83,7 @@ type FieldName
 type Msg
     = UpdateField FieldName (Maybe String)
     | UpdateAutocomplete FieldName (Maybe String)
-    | UpdateDate FieldName DatePicker.Msg
+      -- | UpdateDate FieldName DatePicker.Msg
     | UpdateFlag FieldName Bool
     | UpdateCheckbox FieldName Slug Bool
     | Toggle FieldName Bool
@@ -104,15 +109,10 @@ fetchDateToday =
 
 init : ( Model, Cmd Msg )
 init =
-    let
-        ( dateOfBirthDP, dpCmd ) =
-            DatePicker.init
-    in
-    { initialModel
-        | dateOfBirthDP = Just dateOfBirthDP
-    }
+    initialModel
         ! [ fetchDateToday
-          , Cmd.map (UpdateDate DateOfBirth) dpCmd
+
+          -- , Cmd.map (UpdateDate DateOfBirth) dpCmd
           ]
 
 
@@ -122,8 +122,11 @@ update msg model =
         FetchDateToday date ->
             { model | dateOfBirth = Just date } ! []
 
-        UpdateField UserName value ->
-            { model | userName = value } ! []
+        UpdateField Username value ->
+            { model | username = value } ! []
+
+        UpdateField Password value ->
+            { model | password = value } ! []
 
         UpdateField Note value ->
             { model | note = value } ! []
@@ -140,37 +143,8 @@ update msg model =
         UpdateField Country value ->
             { model | country = value, countryFilter = Nothing, isOpenCountry = False } ! []
 
-        UpdateDate DateOfBirth dpMsg ->
-            let
-                ( dateOfBirthInitialDP, _ ) =
-                    DatePicker.init
-
-                ( updatedDP, dpCmd, dateEvent ) =
-                    DatePicker.update
-                        datepickerSettings
-                        dpMsg
-                        (case model.dateOfBirthDP of
-                            Just dateOfBirthDP ->
-                                dateOfBirthDP
-
-                            Nothing ->
-                                dateOfBirthInitialDP
-                        )
-
-                date =
-                    case dateEvent of
-                        DatePicker.NoChange ->
-                            model.dateOfBirth
-
-                        DatePicker.Changed chosenDate ->
-                            chosenDate
-            in
-            { model
-                | dateOfBirth = date
-                , dateOfBirthDP = Just updatedDP
-            }
-                ! [ Cmd.map (UpdateDate DateOfBirth) dpCmd ]
-
+        -- UpdateDate DateOfBirth dpMsg ->
+        --     model ! []
         UpdateAutocomplete Country value ->
             { model | countryFilter = value, isOpenCountry = True } ! []
 
@@ -201,20 +175,32 @@ update msg model =
             model ! []
 
 
-userNameConfig : FormField Model Msg
-userNameConfig =
+usernameConfig : FormField Model Msg
+usernameConfig =
     Form.textConfig
         "user_name"
         "User name"
-        False
         [ minlength 3, maxlength 12 ]
-        .userName
-        (UpdateField UserName)
+        .username
+        (UpdateField Username)
         Focus
         Blur
-        Nothing
         [ NotEmpty "Empty value is not acceptable."
-        , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .userName) "Value must be between 3 and 12 characters length."
+        , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .username) "Value must be between 3 and 12 characters length."
+        ]
+
+
+passwordConfig : FormField Model Msg
+passwordConfig =
+    Form.passwordConfig
+        "password"
+        "Password"
+        []
+        .password
+        (UpdateField Password)
+        Focus
+        Blur
+        [ NotEmpty "Empty value is not acceptable."
         ]
 
 
@@ -223,13 +209,11 @@ noteConfig =
     Form.textareaConfig
         "note"
         "Note"
-        False
         []
         .note
         (UpdateField Note)
         Focus
         Blur
-        Nothing
         [ NotEmpty "Empty value is not acceptable." ]
 
 
@@ -238,7 +222,6 @@ genderConfig =
     Form.radioConfig
         "gender"
         "Gender"
-        False
         []
         .gender
         (UpdateField Gender)
@@ -247,7 +230,6 @@ genderConfig =
         [ RadioOption "Male" "male"
         , RadioOption "Female" "female"
         ]
-        Nothing
         [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 
@@ -256,13 +238,11 @@ privacyConfig =
     Form.checkboxConfig
         "privacy"
         "Privacy"
-        False
         []
         .privacy
         (UpdateFlag Privacy)
         Focus
         Blur
-        Nothing
         []
 
 
@@ -271,14 +251,12 @@ visitedCountriesConfig { visitedCountries } =
     Form.checkboxWithOptionsConfig
         "visited_countries"
         "Visited countries"
-        False
         []
         (List.map (\( label, slug, checked ) -> ( slug, checked )) << .visitedCountries)
         (UpdateCheckbox VisitedCountries)
         Focus
         Blur
         (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) visitedCountries)
-        Nothing
         []
 
 
@@ -304,22 +282,20 @@ cityConfig isOpen =
             , SelectOption "Genoa" "GE"
             ]
         )
-        Nothing
         [ NotEmpty "Empty value is not acceptable." ]
 
 
-dateOfBirthConfig : DatePicker -> FormField Model Msg
-dateOfBirthConfig datepicker =
-    Form.datepickerConfig
-        "date_of_birth"
-        "Date of Birth"
-        False
-        .dateOfBirth
-        (UpdateDate DateOfBirth)
-        datepicker
-        datepickerSettings
-        Nothing
-        [ Custom (Maybe.withDefault False << Maybe.map (\_ -> True) << .dateOfBirth) "This is not a valid date." ]
+
+-- dateOfBirthConfig : DatePicker -> FormField Model Msg
+-- dateOfBirthConfig datepicker =
+--     Form.datepickerConfig
+--         "date_of_birth"
+--         "Date of Birth"
+--         .dateOfBirth
+--         (UpdateDate DateOfBirth)
+--         datepicker
+--         datepickerSettings
+--         [ Custom (Maybe.withDefault False << Maybe.map (\_ -> True) << .dateOfBirth) "This is not a valid date." ]
 
 
 countryConfig : Model -> FormField Model Msg
@@ -331,9 +307,8 @@ countryConfig { countryFilter, isOpenCountry } =
     Form.autocompleteConfig
         "country"
         "Country"
-        False
         isOpenCountry
-        (Just "Nessun risultato disponibile")
+        (Just "No results")
         []
         .countryFilter
         .country
@@ -350,22 +325,24 @@ countryConfig { countryFilter, isOpenCountry } =
          ]
             |> List.filter (String.contains lowerFilter << String.toLower << .label)
         )
-        Nothing
         [ NotEmpty "Empty value is not acceptable." ]
 
 
 view : Model -> Html Msg
 view model =
     div
-        [ class "a-container a-container--small" ]
-        [ Form.render model userNameConfig
-        , Form.render model noteConfig
-        , Form.render model genderConfig
-        , Form.render model privacyConfig
-        , Form.render model (visitedCountriesConfig model)
-        , Form.render model (cityConfig model.isOpenCity)
-        , renderOrNothing (Maybe.map (Form.render model << dateOfBirthConfig) model.dateOfBirthDP)
-        , Form.render model (countryConfig model)
+        [ class "wrapper" ]
+        [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.0.1.css" ] []
+        , Form.wrapper <| Form.render model usernameConfig
+        , Form.wrapper <| Form.render model passwordConfig
+        , Form.wrapper <| Form.render model noteConfig
+        , Form.wrapper <| Form.render model genderConfig
+        , Form.wrapper <| Form.render model privacyConfig
+        , Form.wrapper <| Form.render model (visitedCountriesConfig model)
+        , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
+
+        -- , Form.wrapper <| renderOrNothing (Maybe.map (Form.render model << dateOfBirthConfig) model.dateOfBirthDP)
+        , Form.wrapper <| Form.render model (countryConfig model)
         ]
 
 
@@ -377,86 +354,3 @@ renderOrNothing maybeHtml =
 formatDate : String -> Maybe Date -> String
 formatDate dateFormat date =
     Maybe.map (Date.Format.format dateFormat) date |> Maybe.withDefault ""
-
-
-datepickerSettings : DatePicker.Settings
-datepickerSettings =
-    let
-        settings =
-            DatePicker.defaultSettings
-    in
-    { settings
-        | dateFormatter = formatDate "%d/%m/%Y" << Just
-        , dayFormatter = dayFormatter
-        , monthFormatter = monthFormatter
-        , firstDayOfWeek = Mon
-        , inputClassList =
-            [ ( "form__field__input", True )
-            , ( "form__field__input--datepicker", True )
-            ]
-    }
-
-
-dayFormatter : Day -> String
-dayFormatter day =
-    case day of
-        Mon ->
-            "Lun"
-
-        Tue ->
-            "Mar"
-
-        Wed ->
-            "Mer"
-
-        Thu ->
-            "Gio"
-
-        Fri ->
-            "Ven"
-
-        Sat ->
-            "Sab"
-
-        Sun ->
-            "Dom"
-
-
-monthFormatter : Month -> String
-monthFormatter month =
-    case month of
-        Jan ->
-            "Gennaio"
-
-        Feb ->
-            "Febbraio"
-
-        Mar ->
-            "Marzo"
-
-        Apr ->
-            "Aprile"
-
-        May ->
-            "Maggio"
-
-        Jun ->
-            "Giugno"
-
-        Jul ->
-            "Luglio"
-
-        Aug ->
-            "Agosto"
-
-        Sep ->
-            "Settembre"
-
-        Oct ->
-            "Ottobre"
-
-        Nov ->
-            "Novembre"
-
-        Dec ->
-            "Dicembre"

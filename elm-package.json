@@ -11,7 +11,7 @@
         "Prima.Form"
     ],
     "dependencies": {
-        "elm-community/elm-datepicker": "7.0.0 <= v < 8.0.0",
+        "Leonti/elm-material-datepicker": "1.0.0 <= v < 2.0.0",
         "elm-lang/core": "5.0.0 <= v < 6.0.0",
         "elm-lang/html": "2.0.0 <= v < 3.0.0",
         "mgold/elm-date-format": "1.6.0 <= v < 2.0.0"
