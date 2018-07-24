@@ -57,7 +57,8 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 -}
 
-import Date exposing (Date)
+import Date exposing (Date, Day(..), Month(..))
+import Date.Format as DateFormat
 import DatePicker
 import Html exposing (..)
 import Html.Attributes
@@ -237,8 +238,12 @@ type alias DatepickerConfig model msg =
     { slug : String
     , label : String
     , reader : model -> Maybe Date
-    , tagger : DatePicker.Msg -> msg
+    , tagger : Maybe Date -> msg
+    , datePickerTagger : DatePicker.Msg -> msg
+    , onFocus : msg
+    , onBlur : msg
     , instance : DatePicker.Model
+    , showDatePicker : Bool
     }
 
 
@@ -472,9 +477,9 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
 
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
 -}
-datepickerConfig : String -> String -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker.Model -> List (Validation model) -> FormField model msg
-datepickerConfig slug label reader tagger datepicker validations =
-    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label reader tagger datepicker) validations
+datepickerConfig : String -> String -> (model -> Maybe Date) -> (Maybe Date -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> List (Validation model) -> FormField model msg
+datepickerConfig slug label reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker validations =
+    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker) validations
 
 
 {-| Autocomplete configuration method.
@@ -957,32 +962,39 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } option =
 
 
 renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> List (Html msg)
-renderDatepicker model ({ reader, tagger, slug, label, instance } as config) validations =
+renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instance, showDatePicker } as config) validations =
     let
         valid =
             validate model (FormFieldDatepickerConfig config validations)
 
         pristine =
             (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
-
-        dateToString : Date -> String
-        dateToString date =
-            let
-                _ =
-                    Debug.log "date is" date
-
-                _ =
-                    Debug.log "date string is" (String.join "-" [ toString (Date.year date), toString (Date.month date), toString (Date.day date) ])
-            in
-            String.join "-" [ toString (Date.year date), toString (Date.month date), toString (Date.day date) ]
     in
     [ renderLabel slug label
-    , Html.map tagger (DatePicker.view instance)
+    , Html.input
+        [ type_ "text"
+        , onInput (tagger << Result.toMaybe << Date.fromString)
+        , (value << Maybe.withDefault "" << Maybe.map (DateFormat.format "%d/%m/%Y") << reader) model
+        , onFocus config.onFocus
+        , onBlur config.onBlur
+        , id slug
+        , name slug
+        , classList
+            [ ( "a-form__field__input", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            ]
+        ]
+        []
+    , (renderIf showDatePicker << Html.map datePickerTagger << DatePicker.view) instance
     , Html.input
         [ attribute "type" "date"
-
-        -- , onInput (tagger << Result.toMaybe << Date.fromString)
-        , (value << Maybe.withDefault "porcoddio" << Maybe.map dateToString << reader) model
+        , onInput (tagger << Result.toMaybe << Date.fromString)
+        , (value << Maybe.withDefault "" << Maybe.map (DateFormat.format "%d/%m/%Y") << reader) model
+        , onFocus config.onFocus
+        , onBlur config.onBlur
         , id slug
         , name slug
         , classList

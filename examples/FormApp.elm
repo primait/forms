@@ -31,6 +31,7 @@ type alias Model =
     , privacy : Bool
     , dateOfBirth : Maybe Date
     , dateOfBirthDP : DatePicker.Model
+    , isVisibleDP : Bool
     , country : Maybe String
     , countryFilter : Maybe String
     , isOpenCountry : Bool
@@ -63,6 +64,7 @@ initialModel =
         False
         Nothing
         (DatePicker.init initialDate "#000000")
+        True
         Nothing
         Nothing
         False
@@ -88,7 +90,8 @@ type FieldName
 type Msg
     = UpdateField FieldName (Maybe String)
     | UpdateAutocomplete FieldName (Maybe String)
-    | UpdateDate FieldName DatePicker.Msg
+    | UpdateDatePicker FieldName DatePicker.Msg
+    | UpdateDate FieldName (Maybe Date)
     | UpdateFlag FieldName Bool
     | UpdateCheckbox FieldName Slug Bool
     | Toggle FieldName Bool
@@ -144,12 +147,28 @@ update msg model =
         UpdateField Country value ->
             { model | country = value, countryFilter = Nothing, isOpenCountry = False } ! []
 
-        UpdateDate DateOfBirth dpMsg ->
+        UpdateDatePicker DateOfBirth dpMsg ->
             let
                 _ =
                     Debug.log "dpMsg" dpMsg
+
+                updatedInstance =
+                    DatePicker.update dpMsg model.dateOfBirthDP
             in
-            { model | dateOfBirth = Just (DatePicker.selectedDate model.dateOfBirthDP) } ! []
+            { model | dateOfBirthDP = updatedInstance, dateOfBirth = (Just << DatePicker.selectedDate) updatedInstance } ! []
+
+        UpdateDate DateOfBirth date ->
+            { model
+                | dateOfBirthDP =
+                    case date of
+                        Just d ->
+                            DatePicker.init d "#000000"
+
+                        Nothing ->
+                            model.dateOfBirthDP
+                , dateOfBirth = date
+            }
+                ! []
 
         UpdateAutocomplete Country value ->
             { model | countryFilter = value, isOpenCountry = True } ! []
@@ -291,15 +310,19 @@ cityConfig isOpen =
         [ NotEmpty "Empty value is not acceptable." ]
 
 
-dateOfBirthConfig : DatePicker.Model -> FormField Model Msg
-dateOfBirthConfig datepicker =
+dateOfBirthConfig : Bool -> DatePicker.Model -> FormField Model Msg
+dateOfBirthConfig showDatePicker datepicker =
     Form.datepickerConfig
         "date_of_birth"
         "Date of Birth"
         .dateOfBirth
         (UpdateDate DateOfBirth)
+        (UpdateDatePicker DateOfBirth)
+        Focus
+        Blur
         datepicker
-        [ Custom (Maybe.withDefault False << Maybe.map (\_ -> True) << .dateOfBirth) "This is not a valid date." ]
+        showDatePicker
+        [ Custom (Maybe.withDefault False << Maybe.map (always True) << .dateOfBirth) "This is not a valid date." ]
 
 
 countryConfig : Model -> FormField Model Msg
@@ -337,6 +360,7 @@ view model =
     div
         [ class "wrapper" ]
         [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.0.1.css" ] []
+        , node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://rawgit.com/Leonti/elm-material-datepicker/master/css/date-picker.min.css" ] []
         , Form.wrapper <| Form.render model usernameConfig
         , Form.wrapper <| Form.render model passwordConfig
         , Form.wrapper <| Form.render model noteConfig
@@ -344,7 +368,7 @@ view model =
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
-        , Form.wrapper <| Form.render model (dateOfBirthConfig model.dateOfBirthDP)
+        , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
         , Form.wrapper <| Form.render model (countryConfig model)
         ]
 
