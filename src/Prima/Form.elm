@@ -57,7 +57,6 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 -}
 
 import Date exposing (Date, Day(..), Month(..))
-import DatePicker
 import Html exposing (..)
 import Html.Attributes
     exposing
@@ -80,6 +79,7 @@ import Html.Events
         , onFocus
         , onInput
         )
+import Prima.DatePicker as DatePicker
 import Regex
 import Tuple
 
