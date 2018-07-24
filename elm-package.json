@@ -1,5 +1,5 @@
 {
-    "version": "11.0.0",
+    "version": "12.0.0",
     "summary": "Form library in Elm",
     "repository": "https://github.com/primait/elm-form.git",
     "license": "BSD3",
