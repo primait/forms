@@ -1,5 +1,5 @@
 {
-    "version": "13.0.0",
+    "version": "13.1.0",
     "summary": "Form library in Elm",
     "repository": "https://github.com/primait/elm-form.git",
     "license": "BSD3",
@@ -7,7 +7,8 @@
         "src/"
     ],
     "exposed-modules": [
-        "Prima.Form"
+        "Prima.Form",
+        "Prima.DatePicker"
     ],
     "dependencies": {
         "elm-lang/core": "5.0.0 <= v < 6.0.0",
