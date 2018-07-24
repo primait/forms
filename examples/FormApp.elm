@@ -17,8 +17,6 @@ import Prima.Form as Form
         , SelectOption
         , Validation(..)
         )
-import Task
-import Tuple
 
 
 type alias Model =
@@ -29,7 +27,7 @@ type alias Model =
     , city : Maybe String
     , isOpenCity : Bool
     , privacy : Bool
-    , dateOfBirth : Maybe Date
+    , dateOfBirth : Maybe String
     , dateOfBirthDP : DatePicker.Model
     , isVisibleDP : Bool
     , country : Maybe String
@@ -110,22 +108,14 @@ main =
         }
 
 
-fetchDateToday : Cmd Msg
-fetchDateToday =
-    Task.perform FetchDateToday Date.now
-
-
 init : ( Model, Cmd Msg )
 init =
-    initialModel ! [ fetchDateToday ]
+    initialModel ! []
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        FetchDateToday date ->
-            { model | dateOfBirth = Just date } ! []
-
         UpdateField Username value ->
             { model | username = value } ! []
 
@@ -141,34 +131,41 @@ update msg model =
         UpdateField City value ->
             { model | city = value } ! []
 
-        UpdateFlag Privacy value ->
-            { model | privacy = value } ! []
-
         UpdateField Country value ->
             { model | country = value, countryFilter = Nothing, isOpenCountry = False } ! []
 
+        UpdateField DateOfBirth value ->
+            let
+                unwrap : Maybe (Maybe a) -> Maybe a
+                unwrap theMaybe =
+                    case theMaybe of
+                        Just something ->
+                            something
+
+                        Nothing ->
+                            Nothing
+            in
+            { model
+                | dateOfBirth = value
+                , dateOfBirthDP =
+                    case (unwrap << Maybe.map (Result.toMaybe << Date.fromString)) value of
+                        Just date ->
+                            DatePicker.init date "#000000"
+
+                        _ ->
+                            model.dateOfBirthDP
+            }
+                ! []
+
+        UpdateFlag Privacy value ->
+            { model | privacy = value } ! []
+
         UpdateDatePicker DateOfBirth dpMsg ->
             let
-                _ =
-                    Debug.log "dpMsg" dpMsg
-
                 updatedInstance =
                     DatePicker.update dpMsg model.dateOfBirthDP
             in
-            { model | dateOfBirthDP = updatedInstance, dateOfBirth = (Just << DatePicker.selectedDate) updatedInstance } ! []
-
-        UpdateDate DateOfBirth date ->
-            { model
-                | dateOfBirthDP =
-                    case date of
-                        Just d ->
-                            DatePicker.init d "#000000"
-
-                        Nothing ->
-                            model.dateOfBirthDP
-                , dateOfBirth = date
-            }
-                ! []
+            { model | dateOfBirthDP = updatedInstance, dateOfBirth = (Just << Date.Format.format "%d/%m/%Y" << DatePicker.selectedDate) updatedInstance } ! []
 
         UpdateAutocomplete Country value ->
             { model | countryFilter = value, isOpenCountry = True } ! []
@@ -316,7 +313,7 @@ dateOfBirthConfig showDatePicker datepicker =
         "date_of_birth"
         "Date of Birth"
         .dateOfBirth
-        (UpdateDate DateOfBirth)
+        (UpdateField DateOfBirth)
         (UpdateDatePicker DateOfBirth)
         Focus
         Blur

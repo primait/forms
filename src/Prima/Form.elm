@@ -34,15 +34,14 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 # Basic components configuration
 
-@docs textConfig, passwordConfig, textareaConfig, checkboxConfig, CheckboxOption, checkboxWithOptionsConfig, RadioOption, radioConfig
+@docs textConfig, passwordConfig, textareaConfig, checkboxConfig, CheckboxOption, checkboxWithOptionsConfig, SelectOption, selectConfig, RadioOption, radioConfig
 
 
 # Custom components configuration
 
 @docs AutocompleteOption
 @docs autocompleteConfig
-@docs SelectOption
-@docs selectConfig
+
 @docs datepickerConfig
 
 
@@ -237,8 +236,8 @@ type alias SelectOption =
 type alias DatepickerConfig model msg =
     { slug : String
     , label : String
-    , reader : model -> Maybe Date
-    , tagger : Maybe Date -> msg
+    , reader : model -> Maybe String
+    , tagger : Maybe String -> msg
     , datePickerTagger : DatePicker.Msg -> msg
     , onFocus : msg
     , onBlur : msg
@@ -477,7 +476,7 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
 
 {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
 -}
-datepickerConfig : String -> String -> (model -> Maybe Date) -> (Maybe Date -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> List (Validation model) -> FormField model msg
+datepickerConfig : String -> String -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> List (Validation model) -> FormField model msg
 datepickerConfig slug label reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker validations =
     FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker) validations
 
@@ -973,8 +972,8 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
     [ renderLabel slug label
     , Html.input
         [ type_ "text"
-        , onInput (tagger << Result.toMaybe << Date.fromString)
-        , (value << Maybe.withDefault "" << Maybe.map (DateFormat.format "%d/%m/%Y") << reader) model
+        , onInput (tagger << normalizeInput)
+        , (value << Maybe.withDefault "" << reader) model
         , onFocus config.onFocus
         , onBlur config.onBlur
         , id slug
@@ -991,8 +990,8 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
     , (renderIf showDatePicker << Html.map datePickerTagger << DatePicker.view) instance
     , Html.input
         [ attribute "type" "date"
-        , onInput (tagger << Result.toMaybe << Date.fromString)
-        , (value << Maybe.withDefault "" << Maybe.map (DateFormat.format "%d/%m/%Y") << reader) model
+        , onInput (tagger << normalizeInput)
+        , (value << Maybe.withDefault "" << reader) model
         , onFocus config.onFocus
         , onBlur config.onBlur
         , id slug
