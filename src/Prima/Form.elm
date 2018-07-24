@@ -474,7 +474,37 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
     FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options) validations
 
 
-{-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
+{-| Datepicker configuration method. Uses [Leonti/elm-material-datepicker](http://package.elm-lang.org/packages/Leonti/elm-material-datepicker/latest) under the hood.
+
+    import DatePicker
+    import Date.Format
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    type Msg
+        = OnInputBirthDate (Maybe String)
+        | OnFocusBirthDate
+        | OnBlurBirthDate
+        | OnChangeBirthDateDatePicker DatePicker.Msg
+        ...
+
+    type alias Model =
+      { dateOfBirth : Maybe String
+      , dateOfBirthDP: DatePicker.Model
+      ...
+      }
+
+    update : Msg -> Model -> ( Model, Cmd Msg )
+    update msg model =
+        case msg of
+          OnChangeBirthDateDatePicker dpMsg ->
+              let
+                  updatedInstance =
+                      DatePicker.update dpMsg model.dateOfBirthDP
+              in
+              { model | dateOfBirthDP = updatedInstance, dateOfBirth = (Just << Date.Format.format "%d/%m/%Y" << DatePicker.selectedDate) updatedInstance } ! []
+          ...
+
 -}
 datepickerConfig : String -> String -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> List (Validation model) -> FormField model msg
 datepickerConfig slug label reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker validations =
