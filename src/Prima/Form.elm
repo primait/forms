@@ -57,7 +57,6 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 -}
 
 import Date exposing (Date, Day(..), Month(..))
-import Date.Format as DateFormat
 import DatePicker
 import Html exposing (..)
 import Html.Attributes
