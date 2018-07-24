@@ -1,9 +1,10 @@
 module FormApp exposing (..)
 
--- import DatePicker exposing (DatePicker)
-
 import Date exposing (Date, Day(..), Month(..))
+import Date.Extra.Core exposing (intToMonth)
+import Date.Extra.Create exposing (dateFromFields)
 import Date.Format
+import DatePicker
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Prima.Form as Form
@@ -29,8 +30,7 @@ type alias Model =
     , isOpenCity : Bool
     , privacy : Bool
     , dateOfBirth : Maybe Date
-
-    -- , dateOfBirthDP : Maybe DatePicker
+    , dateOfBirthDP : DatePicker.Model
     , country : Maybe String
     , countryFilter : Maybe String
     , isOpenCountry : Bool
@@ -46,6 +46,11 @@ type alias Slug =
     String
 
 
+initialDate : Date
+initialDate =
+    dateFromFields 2018 (intToMonth 1) 1 0 0 0 0
+
+
 initialModel : Model
 initialModel =
     Model
@@ -57,8 +62,8 @@ initialModel =
         False
         False
         Nothing
+        (DatePicker.init initialDate "#000000")
         Nothing
-        -- Nothing
         Nothing
         False
         [ ( "Italy", "ITA", False )
@@ -83,7 +88,7 @@ type FieldName
 type Msg
     = UpdateField FieldName (Maybe String)
     | UpdateAutocomplete FieldName (Maybe String)
-      -- | UpdateDate FieldName DatePicker.Msg
+    | UpdateDate FieldName DatePicker.Msg
     | UpdateFlag FieldName Bool
     | UpdateCheckbox FieldName Slug Bool
     | Toggle FieldName Bool
@@ -109,11 +114,7 @@ fetchDateToday =
 
 init : ( Model, Cmd Msg )
 init =
-    initialModel
-        ! [ fetchDateToday
-
-          -- , Cmd.map (UpdateDate DateOfBirth) dpCmd
-          ]
+    initialModel ! [ fetchDateToday ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,8 +144,13 @@ update msg model =
         UpdateField Country value ->
             { model | country = value, countryFilter = Nothing, isOpenCountry = False } ! []
 
-        -- UpdateDate DateOfBirth dpMsg ->
-        --     model ! []
+        UpdateDate DateOfBirth dpMsg ->
+            let
+                _ =
+                    Debug.log "dpMsg" dpMsg
+            in
+            { model | dateOfBirth = Just (DatePicker.selectedDate model.dateOfBirthDP) } ! []
+
         UpdateAutocomplete Country value ->
             { model | countryFilter = value, isOpenCountry = True } ! []
 
@@ -285,17 +291,15 @@ cityConfig isOpen =
         [ NotEmpty "Empty value is not acceptable." ]
 
 
-
--- dateOfBirthConfig : DatePicker -> FormField Model Msg
--- dateOfBirthConfig datepicker =
---     Form.datepickerConfig
---         "date_of_birth"
---         "Date of Birth"
---         .dateOfBirth
---         (UpdateDate DateOfBirth)
---         datepicker
---         datepickerSettings
---         [ Custom (Maybe.withDefault False << Maybe.map (\_ -> True) << .dateOfBirth) "This is not a valid date." ]
+dateOfBirthConfig : DatePicker.Model -> FormField Model Msg
+dateOfBirthConfig datepicker =
+    Form.datepickerConfig
+        "date_of_birth"
+        "Date of Birth"
+        .dateOfBirth
+        (UpdateDate DateOfBirth)
+        datepicker
+        [ Custom (Maybe.withDefault False << Maybe.map (\_ -> True) << .dateOfBirth) "This is not a valid date." ]
 
 
 countryConfig : Model -> FormField Model Msg
@@ -340,8 +344,7 @@ view model =
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
-
-        -- , Form.wrapper <| renderOrNothing (Maybe.map (Form.render model << dateOfBirthConfig) model.dateOfBirthDP)
+        , Form.wrapper <| Form.render model (dateOfBirthConfig model.dateOfBirthDP)
         , Form.wrapper <| Form.render model (countryConfig model)
         ]
 

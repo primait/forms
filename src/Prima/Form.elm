@@ -10,7 +10,7 @@ module Prima.Form
         , autocompleteConfig
         , checkboxConfig
         , checkboxWithOptionsConfig
-          -- , datepickerConfig
+        , datepickerConfig
         , isValid
         , passwordConfig
         , radioConfig
@@ -43,7 +43,7 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 @docs autocompleteConfig
 @docs SelectOption
 @docs selectConfig
--- @docs datepickerConfig
+@docs datepickerConfig
 
 
 # Render a FormField
@@ -57,9 +57,8 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 -}
 
--- import DatePicker exposing (..)
-
 import Date exposing (Date)
+import DatePicker
 import Html exposing (..)
 import Html.Attributes
     exposing
@@ -104,7 +103,7 @@ type FormFieldConfig model msg
     | FormFieldCheckboxConfig (CheckboxConfig model msg) (List (Validation model))
     | FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig model msg) (List (Validation model))
     | FormFieldSelectConfig (SelectConfig model msg) (List (Validation model))
-      -- | FormFieldDatepickerConfig (DatepickerConfig model msg) (List (Validation model))
+    | FormFieldDatepickerConfig (DatepickerConfig model msg) (List (Validation model))
     | FormFieldAutocompleteConfig (AutocompleteConfig model msg) (List (Validation model))
 
 
@@ -234,15 +233,13 @@ type alias SelectOption =
     }
 
 
-
--- type alias DatepickerConfig model msg =
---     { slug : String
---     , label : String
---     , reader : model -> Maybe Date
---     , tagger : DatePicker.Msg -> msg
---     , instance : DatePicker
---     , settings : DatePicker.Settings
---     }
+type alias DatepickerConfig model msg =
+    { slug : String
+    , label : String
+    , reader : model -> Maybe Date
+    , tagger : DatePicker.Msg -> msg
+    , instance : DatePicker.Model
+    }
 
 
 type alias AutocompleteConfig model msg =
@@ -473,12 +470,11 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
     FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options) validations
 
 
-
--- {-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
--- -}
--- datepickerConfig : String -> String -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker -> DatePicker.Settings -> List (Validation model) -> FormField model msg
--- datepickerConfig slug label reader tagger datepicker datepickerSettings validations =
---     FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label reader tagger datepicker datepickerSettings) validations
+{-| Datepicker configuration method. Uses Bogdanp/elm-datepicker under the hood.
+-}
+datepickerConfig : String -> String -> (model -> Maybe Date) -> (DatePicker.Msg -> msg) -> DatePicker.Model -> List (Validation model) -> FormField model msg
+datepickerConfig slug label reader tagger datepicker validations =
+    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label reader tagger datepicker) validations
 
 
 {-| Autocomplete configuration method.
@@ -555,8 +551,9 @@ render model (FormField opaqueConfig) =
         FormFieldSelectConfig config validation ->
             renderSelect model config validation
 
-        -- FormFieldDatepickerConfig config validation ->
-        --     renderDatepicker model config validation
+        FormFieldDatepickerConfig config validation ->
+            renderDatepicker model config validation
+
         FormFieldAutocompleteConfig config validation ->
             renderAutocomplete model config validation
 
@@ -959,67 +956,52 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } option =
         ]
 
 
+renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> List (Html msg)
+renderDatepicker model ({ reader, tagger, slug, label, instance } as config) validations =
+    let
+        valid =
+            validate model (FormFieldDatepickerConfig config validations)
 
--- renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> List (Html msg)
--- renderDatepicker model ({ reader, tagger, slug, label, instance, settings } as config) validations =
---     []
--- let
---     valid =
---         validate model (FormFieldDatepickerConfig config validations)
---
---     pristine =
---         (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
---
---     formatDate : String -> String
---     formatDate date =
---         -- From dd/mm/yyyy to yyyy-mm-dd which is required by input[type="date"]
---         (String.join "-" << List.reverse)
---             [ String.left 2 date
---             , (String.left 2 << String.dropLeft 3) date
---             , (String.left 4 << String.dropLeft 6) date
---             ]
---
---     datepickerSettings =
---         { settings
---             | isDisabled = always isDisabled
---             , inputClassList =
---                 [ ( "is-valid", valid )
---                 , ( "is-invalid", not valid )
---                 , ( "is-pristine", pristine )
---                 , ( "is-touched", not pristine )
---                 , ( "is-disabled", isDisabled )
---                 ]
---                     ++ settings.inputClassList
---         }
--- in
---
---     [ renderLabel slug label
---     , Html.map tagger (DatePicker.view (reader model) datepickerSettings instance)
---     , Html.input
---         [ attribute "type" "date"
---         , onInput (tagger << DatePicker.pick << Result.toMaybe << Date.fromString)
---         , (value << Maybe.withDefault "" << Maybe.map (formatDate << settings.dateFormatter) << reader) model
---         , id slug
---         , name slug
---
---         , classList
---             [ ( "a-form__field__date", True )
---             , ( "is-valid", valid )
---             , ( "is-invalid", not valid )
---             , ( "is-pristine", pristine )
---             , ( "is-touched", not pristine )
---             ]
---         ]
---         []
---     , (renderIf (not valid && not pristine)
---         << renderError
---         << String.join " "
---         << pickError model
---         << FormFieldDatepickerConfig config
---       )
---         validations
---
---     ]
+        pristine =
+            (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+
+        dateToString : Date -> String
+        dateToString date =
+            let
+                _ =
+                    Debug.log "date is" date
+
+                _ =
+                    Debug.log "date string is" (String.join "-" [ toString (Date.year date), toString (Date.month date), toString (Date.day date) ])
+            in
+            String.join "-" [ toString (Date.year date), toString (Date.month date), toString (Date.day date) ]
+    in
+    [ renderLabel slug label
+    , Html.map tagger (DatePicker.view instance)
+    , Html.input
+        [ attribute "type" "date"
+
+        -- , onInput (tagger << Result.toMaybe << Date.fromString)
+        , (value << Maybe.withDefault "porcoddio" << Maybe.map dateToString << reader) model
+        , id slug
+        , name slug
+        , classList
+            [ ( "a-form__field__date", True )
+            , ( "is-valid", valid )
+            , ( "is-invalid", not valid )
+            , ( "is-pristine", pristine )
+            , ( "is-touched", not pristine )
+            ]
+        ]
+        []
+    , (renderIf (not valid && not pristine)
+        << renderError
+        << String.join " "
+        << pickError model
+        << FormFieldDatepickerConfig config
+      )
+        validations
+    ]
 
 
 renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> List (Html msg)
@@ -1165,8 +1147,9 @@ validateRule model config validation =
         ( NotEmpty _, FormFieldAutocompleteConfig { choiceReader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << choiceReader) model
 
-        -- ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
-        --     (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
+        ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
+            (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
+
         ( Expression exp _, FormFieldTextConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
@@ -1207,8 +1190,9 @@ pickValidationRules opaqueConfig =
         FormFieldCheckboxWithOptionsConfig _ validations ->
             validations
 
-        -- FormFieldDatepickerConfig _ validations ->
-        --     validations
+        FormFieldDatepickerConfig _ validations ->
+            validations
+
         FormFieldAutocompleteConfig _ validations ->
             validations
 
