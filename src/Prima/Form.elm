@@ -968,12 +968,18 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
 
         pristine =
             (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+
+        inputTextFormat str =
+            (String.join "/" << List.reverse << String.split "-") str
+
+        inputDateFormat str =
+            (String.join "-" << List.reverse << String.split "/") str
     in
     [ renderLabel slug label
     , Html.input
         [ type_ "text"
         , onInput (tagger << normalizeInput)
-        , (value << Maybe.withDefault "" << reader) model
+        , (value << Maybe.withDefault "" << Maybe.map inputTextFormat << reader) model
         , onFocus config.onFocus
         , onBlur config.onBlur
         , id slug
@@ -991,7 +997,7 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
     , Html.input
         [ attribute "type" "date"
         , onInput (tagger << normalizeInput)
-        , (value << Maybe.withDefault "" << reader) model
+        , (value << Maybe.withDefault "" << Maybe.map inputDateFormat << reader) model
         , onFocus config.onFocus
         , onBlur config.onBlur
         , id slug
