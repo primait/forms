@@ -1184,6 +1184,9 @@ validateRule model config validation =
         ( NotEmpty _, FormFieldTextareaConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
+        ( NotEmpty _, FormFieldPasswordConfig { reader } _ ) ->
+            (not << isEmpty << Maybe.withDefault "" << reader) model
+
         ( NotEmpty _, FormFieldRadioConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << reader) model
 
@@ -1197,6 +1200,9 @@ validateRule model config validation =
             (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
 
         ( Expression exp _, FormFieldTextConfig { reader } _ ) ->
+            (Regex.contains exp << Maybe.withDefault "" << reader) model
+
+        ( Expression exp _, FormFieldPasswordConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
         ( Expression exp _, FormFieldTextareaConfig { reader } _ ) ->
