@@ -15,6 +15,7 @@ module Prima.Form
         , passwordConfig
         , radioConfig
         , render
+        , renderWithGroup
         , selectConfig
         , textConfig
         , textareaConfig
@@ -47,7 +48,7 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 # Render a FormField
 
-@docs render, wrapper
+@docs render, renderWithGroup, wrapper
 
 
 # Validate a FormField
@@ -445,17 +446,18 @@ checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options 
     type alias Model =
         { city : Maybe String
         , isOpenCitySelect : Bool
+        , isDisabledCity: Bool
         ...
         }
 
     ...
 
-    cityConfig : Bool -> FormField Model Msg
-    cityConfig isOpenCitySelect =
+    cityConfig : Bool -> Bool -> FormField Model Msg
+    cityConfig isDisabledCity isOpenCitySelect =
         Form.selectConfig
             "city"
             "City"
-            False
+            isDisabledCity
             isOpenCitySelect
             (Just "Select any option")
             []
@@ -564,41 +566,65 @@ render : model -> FormField model msg -> List (Html msg)
 render model (FormField opaqueConfig) =
     case opaqueConfig of
         FormFieldTextConfig config validation ->
-            renderInput model config validation
+            renderLabel config.slug config.label :: renderInput model config validation
 
         FormFieldPasswordConfig config validation ->
-            renderPassword model config validation
+            renderLabel config.slug config.label :: renderPassword model config validation
 
         FormFieldTextareaConfig config validation ->
-            renderTextarea model config validation
+            renderLabel config.slug config.label :: renderTextarea model config validation
 
         FormFieldRadioConfig config validation ->
-            renderRadio model config validation
+            renderLabel config.slug config.label :: renderRadio model config validation
 
         FormFieldCheckboxConfig config validation ->
-            renderCheckbox model config validation
+            renderLabel config.slug config.label :: renderCheckbox model config validation
 
         FormFieldCheckboxWithOptionsConfig config validation ->
-            renderCheckboxWithOptions model config validation
+            renderLabel config.slug config.label :: renderCheckboxWithOptions model config validation
 
         FormFieldSelectConfig config validation ->
-            renderSelect model config validation
+            renderLabel config.slug config.label :: renderSelect model config validation
 
         FormFieldDatepickerConfig config validation ->
-            renderDatepicker model config validation
+            renderLabel config.slug config.label :: renderDatepicker model config validation
 
         FormFieldAutocompleteConfig config validation ->
-            renderAutocomplete model config validation
+            renderLabel config.slug config.label :: renderAutocomplete model config validation
+
+
+{-| Method for rendering a `FormField` adding a div which wraps the input field. Can be only used with `textConfig` and `passwordConfig.
+-}
+renderWithGroup : Html msg -> model -> FormField model msg -> List (Html msg)
+renderWithGroup groupContent model (FormField opaqueConfig) =
+    case opaqueConfig of
+        FormFieldTextConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: renderInput model config validation
+            ]
+
+        FormFieldPasswordConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: renderPassword model config validation
+            ]
+
+        _ ->
+            []
 
 
 {-| Wrapper for a FormField rendered with `render` function.
 -}
 wrapper : List (Html msg) -> Html msg
-wrapper content =
+wrapper =
     div
         [ class "a-form__field"
         ]
-        content
+
+
+groupWrapper : List (Html msg) -> Html msg
+groupWrapper =
+    div
+        [ class "m-form__field__group" ]
 
 
 renderLabel : String -> String -> Html msg
@@ -627,8 +653,7 @@ renderInput model ({ reader, tagger, slug, label, attrs } as config) validations
         pristine =
             (not << validate model) (FormFieldTextConfig config [ NotEmpty "" ])
     in
-    [ renderLabel slug label
-    , Html.input
+    [ Html.input
         ([ type_ "text"
          , onInput (tagger << normalizeInput)
          , onFocus config.onFocus
@@ -666,8 +691,7 @@ renderPassword model ({ reader, tagger, slug, label, attrs } as config) validati
         pristine =
             (not << validate model) (FormFieldPasswordConfig config [ NotEmpty "" ])
     in
-    [ renderLabel slug label
-    , Html.input
+    [ Html.input
         ([ type_ "password"
          , onInput (tagger << normalizeInput)
          , onFocus config.onFocus
@@ -705,8 +729,7 @@ renderTextarea model ({ reader, tagger, slug, label, attrs } as config) validati
         pristine =
             (not << validate model) (FormFieldTextareaConfig config [ NotEmpty "" ])
     in
-    [ renderLabel slug label
-    , Html.textarea
+    [ Html.textarea
         ([ onInput (tagger << normalizeInput)
          , onFocus config.onFocus
          , onBlur config.onBlur
@@ -740,8 +763,7 @@ renderRadio model ({ slug, label, options } as config) validations =
         valid =
             validate model (FormFieldRadioConfig config validations)
     in
-    renderLabel slug label
-        :: (List.concat << List.map (renderRadioOption model config)) options
+    (List.concat << List.map (renderRadioOption model config)) options
         ++ (List.singleton
                 << renderIf (not valid)
                 << renderError
@@ -791,8 +813,7 @@ renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validati
         valid =
             validate model (FormFieldCheckboxConfig config validations)
     in
-    [ renderLabel slug label
-    , Html.input
+    [ Html.input
         ([ type_ "checkbox"
          , (onClick << tagger << not << reader) model
          , onFocus config.onFocus
@@ -829,8 +850,7 @@ renderCheckboxWithOptions model ({ slug, label, options } as config) validations
         valid =
             validate model (FormFieldCheckboxWithOptionsConfig config validations)
     in
-    renderLabel slug label
-        :: (List.concat << List.map (renderCheckboxOption model config)) options
+    (List.concat << List.map (renderCheckboxOption model config)) options
         ++ (List.singleton
                 << renderIf (not valid)
                 << renderError
@@ -888,8 +908,7 @@ renderSelect model ({ slug, label, reader, optionTagger, attrs } as config) vali
         pristine =
             (not << validate model) (FormFieldSelectConfig config [ NotEmpty "" ])
     in
-    [ renderLabel slug label
-    , renderCustomSelect model config validations
+    [ renderCustomSelect model config validations
     , Html.select
         ([ onInput (optionTagger << normalizeInput)
          , onFocus config.onFocus
@@ -1004,8 +1023,7 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
         inputDateFormat str =
             (String.join "-" << List.reverse << String.split "/") str
     in
-    [ renderLabel slug label
-    , Html.input
+    [ Html.input
         [ type_ "text"
         , onInput (tagger << normalizeInput)
         , (value << Maybe.withDefault "" << Maybe.map inputTextFormat << reader) model
@@ -1080,8 +1098,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 Nothing ->
                     []
     in
-    [ renderLabel slug label
-    , div
+    [ div
         [ classList
             [ ( "a-form__field__autocomplete", True )
             , ( "is-open", isOpen )
@@ -1199,6 +1216,12 @@ validateRule model config validation =
         ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
             (not << isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
 
+        ( NotEmpty _, FormFieldCheckboxConfig { reader } _ ) ->
+            reader model
+
+        ( NotEmpty _, FormFieldCheckboxWithOptionsConfig { reader } _ ) ->
+            (List.any (\( slug, isChecked ) -> isChecked) << reader) model
+
         ( Expression exp _, FormFieldTextConfig { reader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << reader) model
 
@@ -1211,11 +1234,11 @@ validateRule model config validation =
         ( Expression exp _, FormFieldAutocompleteConfig { choiceReader } _ ) ->
             (Regex.contains exp << Maybe.withDefault "" << choiceReader) model
 
+        ( Expression exp _, _ ) ->
+            True
+
         ( Custom validator _, _ ) ->
             validator model
-
-        ( _, _ ) ->
-            True
 
 
 pickValidationRules : FormFieldConfig model msg -> List (Validation model)

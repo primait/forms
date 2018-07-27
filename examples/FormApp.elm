@@ -354,10 +354,18 @@ countryConfig { countryFilter, isOpenCountry } =
 
 view : Model -> Html Msg
 view model =
+    let
+        userIcon =
+            div
+                [ class "m-form__field__group__prepend" ]
+                [ i
+                    [ class "icon-visibility" ]
+                    []
+                ]
+    in
     div
         [ class "wrapper" ]
-        [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.0.1.css" ] []
-        , node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://rawgit.com/Leonti/elm-material-datepicker/master/css/date-picker.min.css" ] []
+        [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.0.5.css" ] []
         , Form.wrapper <| Form.render model usernameConfig
         , Form.wrapper <| Form.render model passwordConfig
         , Form.wrapper <| Form.render model noteConfig
@@ -367,6 +375,7 @@ view model =
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
         , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
         , Form.wrapper <| Form.render model (countryConfig model)
+        , Form.wrapper <| Form.renderWithGroup userIcon model usernameConfig
         ]
 
 
