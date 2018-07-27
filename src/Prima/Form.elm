@@ -569,7 +569,7 @@ render model (FormField opaqueConfig) =
             validate model opaqueConfig
 
         pristine =
-            (not << validate model) opaqueConfig
+            isPristine model opaqueConfig
 
         errors =
             (List.singleton << renderIf (not valid && not pristine) << renderError << String.join " " << pickError model) opaqueConfig
@@ -614,7 +614,7 @@ renderWithGroup groupContent model (FormField opaqueConfig) =
             validate model opaqueConfig
 
         pristine =
-            (not << validate model) opaqueConfig
+            isPristine model opaqueConfig
 
         errors =
             (renderIf (not valid && not pristine) << renderError << String.join " " << pickError model) opaqueConfig
@@ -1144,6 +1144,34 @@ type Validation model
 isValid : model -> FormField model msg -> Bool
 isValid model (FormField opaqueConfig) =
     validate model opaqueConfig
+
+
+isPristine : model -> FormFieldConfig model msg -> Bool
+isPristine model opaqueConfig =
+    case opaqueConfig of
+        FormFieldTextConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldTextareaConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldPasswordConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldRadioConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldSelectConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldAutocompleteConfig { choiceReader } _ ->
+            (isEmpty << Maybe.withDefault "" << choiceReader) model
+
+        FormFieldDatepickerConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
+
+        _ ->
+            True
 
 
 validate : model -> FormFieldConfig model msg -> Bool
