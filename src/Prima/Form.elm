@@ -564,7 +564,17 @@ autocompleteConfig slug label isOpen noResults attrs filterReader choiceReader f
 -}
 render : model -> FormField model msg -> List (Html msg)
 render model (FormField opaqueConfig) =
-    case opaqueConfig of
+    let
+        valid =
+            validate model opaqueConfig
+
+        pristine =
+            (not << validate model) opaqueConfig
+
+        errors =
+            (List.singleton << renderIf (not valid && not pristine) << renderError << String.join " " << pickError model) opaqueConfig
+    in
+    (case opaqueConfig of
         FormFieldTextConfig config validation ->
             renderLabel config.slug config.label :: renderInput model config validation
 
@@ -591,21 +601,35 @@ render model (FormField opaqueConfig) =
 
         FormFieldAutocompleteConfig config validation ->
             renderLabel config.slug config.label :: renderAutocomplete model config validation
+    )
+        ++ errors
 
 
 {-| Method for rendering a `FormField` adding a div which wraps the input field. Can be only used with `textConfig` and `passwordConfig.
 -}
 renderWithGroup : Html msg -> model -> FormField model msg -> List (Html msg)
 renderWithGroup groupContent model (FormField opaqueConfig) =
+    let
+        valid =
+            validate model opaqueConfig
+
+        pristine =
+            (not << validate model) opaqueConfig
+
+        errors =
+            (renderIf (not valid && not pristine) << renderError << String.join " " << pickError model) opaqueConfig
+    in
     case opaqueConfig of
         FormFieldTextConfig config validation ->
             [ renderLabel config.slug config.label
             , groupWrapper <| groupContent :: renderInput model config validation
+            , errors
             ]
 
         FormFieldPasswordConfig config validation ->
             [ renderLabel config.slug config.label
             , groupWrapper <| groupContent :: renderPassword model config validation
+            , errors
             ]
 
         _ ->
@@ -672,13 +696,6 @@ renderInput model ({ reader, tagger, slug, label, attrs } as config) validations
             ++ attrs
         )
         []
-    , (renderIf (not valid && not pristine)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldTextConfig config
-      )
-        validations
     ]
 
 
@@ -710,13 +727,6 @@ renderPassword model ({ reader, tagger, slug, label, attrs } as config) validati
             ++ attrs
         )
         []
-    , (renderIf (not valid && not pristine)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldPasswordConfig config
-      )
-        validations
     ]
 
 
@@ -747,13 +757,6 @@ renderTextarea model ({ reader, tagger, slug, label, attrs } as config) validati
             ++ attrs
         )
         []
-    , (renderIf (not valid && not pristine)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldTextareaConfig config
-      )
-        validations
     ]
 
 
@@ -764,14 +767,6 @@ renderRadio model ({ slug, label, options } as config) validations =
             validate model (FormFieldRadioConfig config validations)
     in
     (List.concat << List.map (renderRadioOption model config)) options
-        ++ (List.singleton
-                << renderIf (not valid)
-                << renderError
-                << String.join " "
-                << pickError model
-                << FormFieldRadioConfig config
-           )
-            validations
 
 
 renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html msg)
@@ -834,13 +829,6 @@ renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validati
         ]
         [ text " "
         ]
-    , (renderIf (not valid)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldCheckboxConfig config
-      )
-        validations
     ]
 
 
@@ -851,14 +839,6 @@ renderCheckboxWithOptions model ({ slug, label, options } as config) validations
             validate model (FormFieldCheckboxWithOptionsConfig config validations)
     in
     (List.concat << List.map (renderCheckboxOption model config)) options
-        ++ (List.singleton
-                << renderIf (not valid)
-                << renderError
-                << String.join " "
-                << pickError model
-                << FormFieldCheckboxWithOptionsConfig config
-           )
-            validations
 
 
 renderCheckboxOption : model -> CheckboxWithOptionsConfig model msg -> CheckboxOption -> List (Html msg)
@@ -926,13 +906,6 @@ renderSelect model ({ slug, label, reader, optionTagger, attrs } as config) vali
             ++ attrs
         )
         (List.map (renderSelectOption model config) options)
-    , (renderIf (not valid && not pristine)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldSelectConfig config
-      )
-        validations
     ]
 
 
@@ -1058,13 +1031,6 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
             ]
         ]
         []
-    , (renderIf (not valid && not pristine)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldDatepickerConfig config
-      )
-        validations
     ]
 
 
@@ -1132,13 +1098,6 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 (List.singleton << renderAutocompleteNoResults model) config
             )
         ]
-    , (renderIf (not valid && not pristine)
-        << renderError
-        << String.join " "
-        << pickError model
-        << FormFieldAutocompleteConfig config
-      )
-        validations
     ]
 
 
