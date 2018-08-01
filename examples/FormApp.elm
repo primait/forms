@@ -359,13 +359,13 @@ view model =
             div
                 [ class "m-form__field__group__prepend" ]
                 [ i
-                    [ class "icon-visibility" ]
+                    [ class "a-icon a-icon-mail" ]
                     []
                 ]
     in
     div
         [ class "wrapper" ]
-        [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.0.5.css" ] []
+        [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-latest.css" ] []
         , Form.wrapper <| Form.render model usernameConfig
         , Form.wrapper <| Form.render model passwordConfig
         , Form.wrapper <| Form.render model noteConfig

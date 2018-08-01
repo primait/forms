@@ -605,7 +605,7 @@ render model (FormField opaqueConfig) =
         ++ errors
 
 
-{-| Method for rendering a `FormField` adding a div which wraps the input field. Can be only used with `textConfig` and `passwordConfig.
+{-| Method for rendering a `FormField` adding a div which wraps the input field. Can be only used with Text, Password and Textarea fields.
 -}
 renderWithGroup : Html msg -> model -> FormField model msg -> List (Html msg)
 renderWithGroup groupContent model (FormField opaqueConfig) =
@@ -622,14 +622,17 @@ renderWithGroup groupContent model (FormField opaqueConfig) =
     case opaqueConfig of
         FormFieldTextConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: renderInput model config validation
-            , errors
+            , groupWrapper <| groupContent :: (renderInput model config validation ++ [ errors ])
             ]
 
         FormFieldPasswordConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: renderPassword model config validation
-            , errors
+            , groupWrapper <| groupContent :: (renderPassword model config validation ++ [ errors ])
+            ]
+
+        FormFieldTextareaConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderInput model config validation ++ [ errors ])
             ]
 
         _ ->
