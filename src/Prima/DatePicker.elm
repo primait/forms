@@ -102,53 +102,48 @@ update msg model =
 
 {-| -}
 view : Model -> Html Msg
-view model =
-    let
-        content =
-            if model.selectingYear then
-                yearPicker model
-            else
-                picker model
-    in
+view ({ selectingYear } as model) =
     div
-        [ Html.Attributes.class "date-picker" ]
+        [ class "a-datepicker" ]
         [ header model
-        , content
+        , if selectingYear then
+            yearPicker model
+          else
+            picker model
         ]
 
 
 header : Model -> Html Msg
-header model =
-    let
-        ( dayClass, yearClass ) =
-            if model.selectingYear then
-                ( "day", "year selected" )
-            else
-                ( "day selected", "year" )
-    in
+header ({ date, selectingYear } as model) =
     div
-        [ Html.Attributes.class "header"
+        [ class "a-datepicker__header"
         ]
         [ div
-            [ Html.Attributes.class yearClass, onClick YearSelection ]
-            [ Html.text <| toString <| year model.date
+            [ classList
+                [ ( "a-datepicker__header__year", True )
+                , ( "is-selected", selectingYear )
+                ]
+            , onClick YearSelection
+            ]
+            [ (text << toString << year) date
             ]
         , div
-            [ Html.Attributes.class dayClass, onClick DaySelection ]
-            [ Html.text <| formattedDay model
+            [ classList
+                [ ( "a-datepicker__header__day", True )
+                , ( "is-selected", not selectingYear )
+                ]
+            , onClick DaySelection
+            ]
+            [ (text << formattedDay) model
             ]
         ]
 
 
 weekDays : Html Msg
 weekDays =
-    let
-        days =
-            List.map (\day -> span [] [ Html.text day ]) [ "M", "T", "W", "T", "F", "S", "S" ]
-    in
     div
-        [ Html.Attributes.class "week-days" ]
-        days
+        [ class "a-datepicker__picker__weekDays" ]
+        (List.map (\day -> span [] [ text day ]) [ "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom" ])
 
 
 monthDays : Model -> Html Msg
@@ -168,64 +163,53 @@ monthDays model =
 
         weeks =
             chunks 7 (List.repeat leftPadding 0 ++ List.range 1 daysCount ++ List.repeat rightPadding 0)
-
-        rows =
-            List.map (\week -> weekRow week (day model.date)) weeks
     in
     div
-        [ Html.Attributes.class "month-days" ]
-        [ div
-            [ Html.Attributes.class "day-rows" ]
-            rows
+        [ class "a-datepicker__picker__monthDays"
         ]
+        (List.map (\week -> weekRow week (day model.date)) weeks)
 
 
 weekRow : List Int -> Int -> Html Msg
 weekRow days currentDay =
     div
-        [ Html.Attributes.class "days-row" ]
+        [ class "a-datepicker__picker__days" ]
         (List.map (\day -> dayCell day currentDay) days)
 
 
 dayCell : Int -> Int -> Html Msg
 dayCell dayNumber currentDay =
     if dayNumber > 0 then
-        let
-            backgroundClass =
-                if dayNumber == currentDay then
-                    "day-background selected"
-                else
-                    "day-background"
-        in
-        button
-            [ Html.Attributes.class "day", onClick <| SelectDay dayNumber ]
-            [ div
-                [ Html.Attributes.class backgroundClass
+        div
+            [ classList
+                [ ( "a-datepicker__picker__days__item", True )
+                , ( "is-selected", dayNumber == currentDay )
                 ]
-                []
-            , span [ Html.Attributes.class "day-number" ] [ Html.text (toString dayNumber) ]
+            , (onClick << SelectDay) dayNumber
+            ]
+            [ (text << toString) dayNumber
             ]
     else
         div
-            [ Html.Attributes.class "empty-day" ]
+            [ class "a-datepicker__picker__days__item is-empty" ]
             []
 
 
 picker : Model -> Html Msg
 picker model =
     div
-        [ Html.Attributes.class "picker" ]
+        [ class "a-datepicker__picker" ]
         [ div
-            [ Html.Attributes.class "month-year-selector" ]
-            [ button
-                [ Html.Attributes.class "navigation-wrapper", onClick PrevMonth ]
+            [ class "a-datepicker__picker__header" ]
+            [ span
+                [ class "a-datepicker__picker__header__prevMonth", onClick PrevMonth ]
                 []
             , div
-                [ Html.Attributes.class "month-year" ]
-                [ Html.text <| formattedMonth model
+                [ class "a-datepicker__picker__header__currentMonth" ]
+                [ (text << formattedMonth) model
                 ]
-            , button
-                [ Html.Attributes.class "navigation-wrapper", onClick NextMonth ]
+            , span
+                [ class "a-datepicker__picker__header__nextMonth", onClick NextMonth ]
                 []
             ]
         , weekDays
@@ -240,11 +224,11 @@ yearPicker model =
             List.map (\y -> yearButton y (year model.date)) <| List.range 1917 2117
     in
     div
-        [ Html.Attributes.class "year-picker" ]
+        [ class "year-picker" ]
         [ div
-            [ Html.Attributes.class "year-list-wrapper" ]
+            [ class "year-list-wrapper" ]
             [ div
-                [ Html.Attributes.class "year-list" ]
+                [ class "year-list" ]
                 yearButtons
             ]
         ]
@@ -260,9 +244,9 @@ yearButton year currentYear =
                 ""
     in
     button
-        [ Html.Attributes.class "year", onClick <| SelectYear year ]
+        [ class "year", onClick <| SelectYear year ]
         [ span
-            [ Html.Attributes.class spanClass ]
+            [ class spanClass ]
             [ text <| toString year ]
         ]
 
