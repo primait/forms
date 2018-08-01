@@ -6,8 +6,9 @@ module Prima.DatePicker exposing (Model, Msg, init, selectedDate, update, view)
 
 -}
 
-import Date exposing (Date, day, dayOfWeek, month, year)
-import Date.Extra.Config.Config_en_au exposing (config)
+import Date exposing (Date, Day(..), Month(..), day, dayOfWeek, month, year)
+import Date.Extra.Config exposing (Config)
+import Date.Extra.Config.Config_en_gb exposing (config)
 import Date.Extra.Core exposing (daysInMonth, intToMonth, isoDayOfWeek, toFirstOfMonth)
 import Date.Extra.Duration as Duration
 import Date.Extra.Field as Field
@@ -40,14 +41,27 @@ selectedDate model =
     model.date
 
 
+dateFormatConfig : Config -> Config
+dateFormatConfig ({ i18n, format } as config) =
+    { config
+        | i18n =
+            { i18n
+                | dayShort = String.left 3 << formatDay
+                , dayName = formatDay
+                , monthShort = String.left 3 << formatMonth
+                , monthName = formatMonth
+            }
+    }
+
+
 formattedDay : Model -> String
 formattedDay model =
-    DateFormat.format config "%a, %b %-d" model.date
+    DateFormat.format (dateFormatConfig config) "%a, %b %-d" model.date
 
 
 formattedMonth : Model -> String
 formattedMonth model =
-    DateFormat.format config "%B %Y" <| model.date
+    DateFormat.format (dateFormatConfig config) "%B %Y" <| model.date
 
 
 {-| -}
@@ -219,35 +233,27 @@ picker model =
 
 yearPicker : Model -> Html Msg
 yearPicker model =
-    let
-        yearButtons =
-            List.map (\y -> yearButton y (year model.date)) <| List.range 1917 2117
-    in
     div
-        [ class "year-picker" ]
+        [ class "a-datepicker__yearPicker" ]
         [ div
-            [ class "year-list-wrapper" ]
+            [ class "a-datepicker__yearPicker__scroller" ]
             [ div
-                [ class "year-list" ]
-                yearButtons
+                [ class "a-datepicker__yearPicker__scroller__list" ]
+                (List.map (\y -> yearButton y (year model.date)) <| List.range 1917 2117)
             ]
         ]
 
 
 yearButton : Int -> Int -> Html Msg
 yearButton year currentYear =
-    let
-        spanClass =
-            if year == currentYear then
-                "selected"
-            else
-                ""
-    in
-    button
-        [ class "year", onClick <| SelectYear year ]
-        [ span
-            [ class spanClass ]
-            [ text <| toString year ]
+    span
+        [ classList
+            [ ( "a-datepicker__yearPicker__scroller__list__item", True )
+            , ( "is-selected", year == currentYear )
+            ]
+        , (onClick << SelectYear) year
+        ]
+        [ (text << toString) year
         ]
 
 
@@ -257,3 +263,68 @@ chunks k xs =
         List.take k xs :: chunks k (List.drop k xs)
     else
         [ xs ]
+
+
+formatDay : Day -> String
+formatDay day =
+    case day of
+        Mon ->
+            "Lunedì"
+
+        Tue ->
+            "Martedì"
+
+        Wed ->
+            "Mercoledì"
+
+        Thu ->
+            "Giovedì"
+
+        Fri ->
+            "Venerdì"
+
+        Sat ->
+            "Sabato"
+
+        Sun ->
+            "Domenica"
+
+
+formatMonth : Month -> String
+formatMonth month =
+    case month of
+        Jan ->
+            "Gennaio"
+
+        Feb ->
+            "Febbraio"
+
+        Mar ->
+            "Marzo"
+
+        Apr ->
+            "Aprile"
+
+        May ->
+            "Maggio"
+
+        Jun ->
+            "Giugno"
+
+        Jul ->
+            "Luglio"
+
+        Aug ->
+            "Agosto"
+
+        Sep ->
+            "Settembre"
+
+        Oct ->
+            "Ottobre"
+
+        Nov ->
+            "Novembre"
+
+        Dec ->
+            "Dicembre"
