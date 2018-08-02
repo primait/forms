@@ -605,7 +605,7 @@ render model (FormField opaqueConfig) =
         ++ errors
 
 
-{-| Method for rendering a `FormField` adding a div which wraps the input field. Can be only used with Text, Password and Textarea fields.
+{-| Method for rendering a `FormField` adding a div which wraps the form field.
 -}
 renderWithGroup : Html msg -> model -> FormField model msg -> List (Html msg)
 renderWithGroup groupContent model (FormField opaqueConfig) =
@@ -635,8 +635,35 @@ renderWithGroup groupContent model (FormField opaqueConfig) =
             , groupWrapper <| groupContent :: (renderInput model config validation ++ [ errors ])
             ]
 
-        _ ->
-            []
+        FormFieldRadioConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderRadio model config validation ++ [ errors ])
+            ]
+
+        FormFieldCheckboxConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderCheckbox model config validation ++ [ errors ])
+            ]
+
+        FormFieldCheckboxWithOptionsConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderCheckboxWithOptions model config validation ++ [ errors ])
+            ]
+
+        FormFieldSelectConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderSelect model config validation ++ [ errors ])
+            ]
+
+        FormFieldDatepickerConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderDatepicker model config validation ++ [ errors ])
+            ]
+
+        FormFieldAutocompleteConfig config validation ->
+            [ renderLabel config.slug config.label
+            , groupWrapper <| groupContent :: (renderAutocomplete model config validation ++ [ errors ])
+            ]
 
 
 {-| Wrapper for a FormField rendered with `render` function.
