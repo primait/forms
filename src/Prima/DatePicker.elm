@@ -1,4 +1,4 @@
-module Prima.DatePicker exposing (Model, Msg, init, selectedDate, update, view)
+module Prima.DatePicker exposing (Model, Msg(..), init, selectedDate, update, view)
 
 {-|
 
