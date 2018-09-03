@@ -137,7 +137,12 @@ header ({ date, selectingYear } as model) =
                 [ ( "a-datepicker__header__year", True )
                 , ( "is-selected", selectingYear )
                 ]
-            , onClick YearSelection
+            , onClick
+                (if selectingYear then
+                    DaySelection
+                 else
+                    YearSelection
+                )
             ]
             [ (text << toString << year) date
             ]
