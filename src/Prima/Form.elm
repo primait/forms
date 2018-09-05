@@ -1035,7 +1035,7 @@ renderDatepicker model ({ reader, tagger, datePickerTagger, slug, label, instanc
         , id slug
         , name slug
         , classList
-            [ ( "a-form__field__input", True )
+            [ ( "a-form__field__input a-form__field__datepicker", True )
             , ( "is-valid", valid )
             , ( "is-invalid", not valid )
             , ( "is-pristine", pristine )
