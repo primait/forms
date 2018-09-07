@@ -625,7 +625,12 @@ renderWithGroup groupContent model (FormField opaqueConfig) =
             isPristine model opaqueConfig
 
         errors =
-            (renderIf (not valid && not pristine) << renderError << String.join " " << pickError model) opaqueConfig
+            (renderIf ((not valid && not pristine) || forceShowError opaqueConfig)
+                << renderError
+                << String.join " "
+                << pickError model
+            )
+                opaqueConfig
     in
     case opaqueConfig of
         FormFieldTextConfig config validation ->
