@@ -615,8 +615,8 @@ render model (FormField opaqueConfig) =
 
 {-| Method for rendering a `FormField` adding a div which wraps the form field.
 -}
-renderWithGroup : Html msg -> model -> FormField model msg -> List (Html msg)
-renderWithGroup groupContent model (FormField opaqueConfig) =
+renderWithGroup : List (Html msg) -> model -> FormField model msg -> List (Html msg)
+renderWithGroup groupsContent model (FormField opaqueConfig) =
     let
         valid =
             validate model opaqueConfig
@@ -635,47 +635,47 @@ renderWithGroup groupContent model (FormField opaqueConfig) =
     case opaqueConfig of
         FormFieldTextConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderInput model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderInput model config validation ++ [ errors ])
             ]
 
         FormFieldPasswordConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderPassword model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderPassword model config validation ++ [ errors ])
             ]
 
         FormFieldTextareaConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderInput model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderInput model config validation ++ [ errors ])
             ]
 
         FormFieldRadioConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderRadio model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderRadio model config validation ++ [ errors ])
             ]
 
         FormFieldCheckboxConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderCheckbox model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderCheckbox model config validation ++ [ errors ])
             ]
 
         FormFieldCheckboxWithOptionsConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderCheckboxWithOptions model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderCheckboxWithOptions model config validation ++ [ errors ])
             ]
 
         FormFieldSelectConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderSelect model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderSelect model config validation ++ [ errors ])
             ]
 
         FormFieldDatepickerConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderDatepicker model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderDatepicker model config validation ++ [ errors ])
             ]
 
         FormFieldAutocompleteConfig config validation ->
             [ renderLabel config.slug config.label
-            , groupWrapper <| groupContent :: (renderAutocomplete model config validation ++ [ errors ])
+            , groupWrapper <| groupsContent ++ (renderAutocomplete model config validation ++ [ errors ])
             ]
 
 
