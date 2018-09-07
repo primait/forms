@@ -1,4 +1,4 @@
-module FormApp exposing (..)
+module FormApp exposing (FieldName(..), Label, Model, Msg(..), Slug, cityConfig, countryConfig, dateOfBirthConfig, formatDate, genderConfig, init, initialDate, initialModel, main, noteConfig, passwordConfig, privacyConfig, renderOrNothing, update, usernameConfig, view, visitedCountriesConfig)
 
 import Date exposing (Date, Day(..), Month(..))
 import Date.Extra.Core exposing (intToMonth)
@@ -177,6 +177,7 @@ update msg model =
                         (\( optLabel, optSlug, optChecked ) ->
                             if optSlug == slug then
                                 ( optLabel, optSlug, isChecked )
+
                             else
                                 ( optLabel, optSlug, optChecked )
                         )
@@ -207,6 +208,7 @@ usernameConfig =
         (UpdateField Username)
         Focus
         Blur
+        False
         [ NotEmpty "Empty value is not acceptable."
         , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .username) "Value must be between 3 and 12 characters length."
         ]
@@ -222,6 +224,7 @@ passwordConfig =
         (UpdateField Password)
         Focus
         Blur
+        False
         [ NotEmpty "Empty value is not acceptable."
         ]
 
@@ -236,6 +239,7 @@ noteConfig =
         (UpdateField Note)
         Focus
         Blur
+        False
         [ NotEmpty "Empty value is not acceptable." ]
 
 
@@ -252,6 +256,7 @@ genderConfig =
         [ RadioOption "Male" "male"
         , RadioOption "Female" "female"
         ]
+        False
         [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 
@@ -265,6 +270,7 @@ privacyConfig =
         (UpdateFlag Privacy)
         Focus
         Blur
+        False
         []
 
 
@@ -279,6 +285,7 @@ visitedCountriesConfig { visitedCountries } =
         Focus
         Blur
         (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) visitedCountries)
+        False
         []
 
 
@@ -304,6 +311,7 @@ cityConfig isOpen =
             , SelectOption "Genoa" "GE"
             ]
         )
+        False
         [ NotEmpty "Empty value is not acceptable." ]
 
 
@@ -312,6 +320,7 @@ dateOfBirthConfig showDatePicker datepicker =
     Form.datepickerConfig
         "date_of_birth"
         "Date of Birth"
+        []
         .dateOfBirth
         (UpdateField DateOfBirth)
         (UpdateDatePicker DateOfBirth)
@@ -319,6 +328,7 @@ dateOfBirthConfig showDatePicker datepicker =
         Blur
         datepicker
         showDatePicker
+        False
         [ Custom (Maybe.withDefault False << Maybe.map (always True) << .dateOfBirth) "This is not a valid date." ]
 
 
@@ -349,6 +359,7 @@ countryConfig { countryFilter, isOpenCountry } =
          ]
             |> List.filter (String.contains lowerFilter << String.toLower << .label)
         )
+        False
         [ NotEmpty "Empty value is not acceptable." ]
 
 
