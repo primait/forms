@@ -367,12 +367,13 @@ view : Model -> Html Msg
 view model =
     let
         userIcon =
-            div
+            [ div
                 [ class "m-form__field__group__prepend" ]
                 [ i
                     [ class "a-icon a-icon-mail" ]
                     []
                 ]
+            ]
     in
     div
         [ class "wrapper" ]
