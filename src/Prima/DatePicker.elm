@@ -1,4 +1,4 @@
-module Prima.DatePicker exposing (Model, Msg(..), init, selectedDate, update, view)
+module Prima.DatePicker exposing (init, Model, Msg(..), update, view, selectedDate)
 
 {-|
 
@@ -22,15 +22,17 @@ import Html.Events exposing (onClick)
 type alias Model =
     { date : Date
     , selectingYear : Bool
+    , yearPickerRange : ( Int, Int )
     }
 
 
 {-| Get initial time picker model by passing date and a main color (in hex format)
 -}
-init : Date -> Model
-init date =
+init : Date -> ( Int, Int ) -> Model
+init date range =
     { date = date
     , selectingYear = False
+    , yearPickerRange = range
     }
 
 
@@ -122,6 +124,7 @@ view ({ selectingYear } as model) =
         [ header model
         , if selectingYear then
             yearPicker model
+
           else
             picker model
         ]
@@ -140,6 +143,7 @@ header ({ date, selectingYear } as model) =
             , onClick
                 (if selectingYear then
                     DaySelection
+
                  else
                     YearSelection
                 )
@@ -208,6 +212,7 @@ dayCell dayNumber currentDay =
             ]
             [ (text << toString) dayNumber
             ]
+
     else
         div
             [ class "a-datepicker__picker__days__item is-empty" ]
@@ -238,13 +243,17 @@ picker model =
 
 yearPicker : Model -> Html Msg
 yearPicker model =
+    let
+        ( lowerBound, upperBound ) =
+            model.yearPickerRange
+    in
     div
         [ class "a-datepicker__yearPicker" ]
         [ div
             [ class "a-datepicker__yearPicker__scroller" ]
             [ div
                 [ class "a-datepicker__yearPicker__scroller__list" ]
-                (List.map (\y -> yearButton y (year model.date)) <| List.range 1917 2117)
+                (List.map (\y -> yearButton y (year model.date)) <| List.range lowerBound upperBound)
             ]
         ]
 
@@ -266,6 +275,7 @@ chunks : Int -> List a -> List (List a)
 chunks k xs =
     if List.length xs > k then
         List.take k xs :: chunks k (List.drop k xs)
+
     else
         [ xs ]
 

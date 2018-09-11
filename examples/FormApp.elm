@@ -61,7 +61,7 @@ initialModel =
         False
         False
         Nothing
-        (DatePicker.init initialDate)
+        (DatePicker.init initialDate ( 2018, 2050 ))
         True
         Nothing
         Nothing
@@ -150,7 +150,7 @@ update msg model =
                 , dateOfBirthDP =
                     case (unwrap << Maybe.map (Result.toMaybe << Date.fromString)) value of
                         Just date ->
-                            DatePicker.init date
+                            DatePicker.init date ( 2018, 2050 )
 
                         _ ->
                             model.dateOfBirthDP
