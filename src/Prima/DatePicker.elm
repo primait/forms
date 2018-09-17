@@ -54,7 +54,7 @@ adjustInitialDate day daysRange =
             day
 
         Just ( low, high ) ->
-            if DateCompare.is DateCompare.After day low then
+            if DateCompare.is3 DateCompare.Between day low high then
                 day
             else
                 low
