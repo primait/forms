@@ -134,7 +134,7 @@ fromDateRangeToList : ( Date, Date ) -> List Date
 fromDateRangeToList ( high, low ) =
     let
         diff =
-            Duration.diffDays high low
+            Duration.diffDays high (Duration.add Duration.Day 1 low)
     in
         dayList diff low
 
