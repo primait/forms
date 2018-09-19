@@ -4,7 +4,7 @@ module Prima.Form exposing
     , AutocompleteOption
     , autocompleteConfig
     , datepickerConfig
-    , render, renderWithGroup, wrapper
+    , render, renderWithGroup, renderWithoutLabel, wrapper
     , isValid
     )
 
@@ -34,7 +34,7 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 # Render a FormField
 
-@docs render, renderWithGroup, wrapper
+@docs render, renderWithGroup, renderWithoutLabel, wrapper
 
 
 # Validate a FormField
@@ -82,15 +82,15 @@ type FormField model msg
 Opaque implementation.
 -}
 type FormFieldConfig model msg
-    = FormFieldTextConfig (TextConfig model msg) (List (Validation model))
-    | FormFieldPasswordConfig (PasswordConfig model msg) (List (Validation model))
-    | FormFieldTextareaConfig (TextareaConfig model msg) (List (Validation model))
-    | FormFieldRadioConfig (RadioConfig model msg) (List (Validation model))
+    = FormFieldAutocompleteConfig (AutocompleteConfig model msg) (List (Validation model))
     | FormFieldCheckboxConfig (CheckboxConfig model msg) (List (Validation model))
     | FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig model msg) (List (Validation model))
-    | FormFieldSelectConfig (SelectConfig model msg) (List (Validation model))
     | FormFieldDatepickerConfig (DatepickerConfig model msg) (List (Validation model))
-    | FormFieldAutocompleteConfig (AutocompleteConfig model msg) (List (Validation model))
+    | FormFieldPasswordConfig (PasswordConfig model msg) (List (Validation model))
+    | FormFieldRadioConfig (RadioConfig model msg) (List (Validation model))
+    | FormFieldSelectConfig (SelectConfig model msg) (List (Validation model))
+    | FormFieldTextareaConfig (TextareaConfig model msg) (List (Validation model))
+    | FormFieldTextConfig (TextConfig model msg) (List (Validation model))
 
 
 type alias TextConfig model msg =
@@ -677,6 +677,54 @@ renderWithGroup groupsContent model (FormField opaqueConfig) =
             [ renderLabel config.slug config.label
             , groupWrapper <| groupsContent ++ (renderAutocomplete model config validation ++ [ errors ])
             ]
+
+
+{-| Method for rendering a `FormField` without considering the Label field. Useful to print more elements on the same row.
+-}
+renderWithoutLabel : model -> FormField model msg -> List (Html msg)
+renderWithoutLabel model (FormField opaqueConfig) =
+    let
+        valid =
+            validate model opaqueConfig
+
+        pristine =
+            isPristine model opaqueConfig
+
+        errors =
+            (renderIf ((not valid && not pristine) || forceShowError opaqueConfig)
+                << renderError
+                << String.join " "
+                << pickError model
+            )
+                opaqueConfig
+    in
+    case opaqueConfig of
+        FormFieldTextConfig config validation ->
+            renderInput model config validation ++ [ errors ]
+
+        FormFieldPasswordConfig config validation ->
+            renderPassword model config validation ++ [ errors ]
+
+        FormFieldTextareaConfig config validation ->
+            renderInput model config validation ++ [ errors ]
+
+        FormFieldRadioConfig config validation ->
+            renderRadio model config validation ++ [ errors ]
+
+        FormFieldCheckboxConfig config validation ->
+            renderCheckbox model config validation ++ [ errors ]
+
+        FormFieldCheckboxWithOptionsConfig config validation ->
+            renderCheckboxWithOptions model config validation ++ [ errors ]
+
+        FormFieldSelectConfig config validation ->
+            renderSelect model config validation ++ [ errors ]
+
+        FormFieldDatepickerConfig config validation ->
+            renderDatepicker model config validation ++ [ errors ]
+
+        FormFieldAutocompleteConfig config validation ->
+            renderAutocomplete model config validation ++ [ errors ]
 
 
 {-| Wrapper for a FormField rendered with `render` function.

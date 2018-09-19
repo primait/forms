@@ -49,13 +49,16 @@ initialDate : Date
 initialDate =
     dateFromFields 2018 (intToMonth 1) 1 0 0 0 0
 
+
 lowDate : Date
 lowDate =
     dateFromFields 2018 (intToMonth 9) 15 0 0 0 0
 
+
 highDate : Date
 highDate =
     dateFromFields 2018 (intToMonth 10) 28 0 0 0 0
+
 
 initialModel : Model
 initialModel =
@@ -68,7 +71,7 @@ initialModel =
         False
         False
         Nothing
-        (DatePicker.init initialDate ( 2018, 2050 ) (Just (lowDate, highDate)))
+        (DatePicker.init initialDate ( 2018, 2050 ) (Just ( lowDate, highDate )))
         True
         Nothing
         Nothing
@@ -157,7 +160,7 @@ update msg model =
                 , dateOfBirthDP =
                     case (unwrap << Maybe.map (Result.toMaybe << Date.fromString)) value of
                         Just date ->
-                            DatePicker.init date ( 2018, 2050 ) (Just (lowDate, highDate))
+                            DatePicker.init date ( 2018, 2050 ) (Just ( lowDate, highDate ))
 
                         _ ->
                             model.dateOfBirthDP
@@ -392,8 +395,8 @@ view model =
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
+        , Form.wrapper <| Form.render model (cityConfig model.isOpenCity) ++ Form.renderWithoutLabel model (countryConfig model)
         , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
-        , Form.wrapper <| Form.render model (countryConfig model)
         , Form.wrapper <| Form.renderWithGroup userIcon model usernameConfig
         ]
 
