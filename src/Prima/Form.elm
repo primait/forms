@@ -4,7 +4,7 @@ module Prima.Form exposing
     , AutocompleteOption
     , autocompleteConfig
     , datepickerConfig
-    , render, renderWithGroup, renderWithoutLabel, wrapper
+    , render, renderWithGroup, renderList, wrapper
     , isValid
     )
 
@@ -34,7 +34,7 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 # Render a FormField
 
-@docs render, renderWithGroup, renderWithoutLabel, wrapper
+@docs render, renderWithGroup, renderList, wrapper
 
 
 # Validate a FormField
@@ -679,10 +679,24 @@ renderWithGroup groupsContent model (FormField opaqueConfig) =
             ]
 
 
-{-| Method for rendering a `FormField` without considering the Label field. Useful to print more elements on the same row.
+{-| Method for rendering multiple `FormField` configurations. Used to render more elements on the same row.
 -}
-renderWithoutLabel : model -> FormField model msg -> List (Html msg)
-renderWithoutLabel model (FormField opaqueConfig) =
+renderList : model -> List (FormField model msg) -> List (Html msg)
+renderList model configs =
+    case configs of
+        head :: tail ->
+            ((++) (render model head)
+                << List.concat
+                << List.map (renderListItem model)
+            )
+                tail
+
+        _ ->
+            []
+
+
+renderListItem : model -> FormField model msg -> List (Html msg)
+renderListItem model (FormField opaqueConfig) =
     let
         valid =
             validate model opaqueConfig

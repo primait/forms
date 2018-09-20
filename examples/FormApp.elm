@@ -1,4 +1,27 @@
-module FormApp exposing (FieldName(..), Label, Model, Msg(..), Slug, cityConfig, countryConfig, dateOfBirthConfig, formatDate, genderConfig, init, initialDate, initialModel, main, noteConfig, passwordConfig, privacyConfig, renderOrNothing, update, usernameConfig, view, visitedCountriesConfig)
+module FormApp exposing
+    ( FieldName(..)
+    , Label
+    , Model
+    , Msg(..)
+    , Slug
+    , cityConfig
+    , countryConfig
+    , dateOfBirthConfig
+    , formatDate
+    , genderConfig
+    , init
+    , initialDate
+    , initialModel
+    , main
+    , noteConfig
+    , passwordConfig
+    , privacyConfig
+    , renderOrNothing
+    , update
+    , usernameConfig
+    , view
+    , visitedCountriesConfig
+    )
 
 import Date exposing (Date, Day(..), Month(..))
 import Date.Extra.Core exposing (intToMonth)
@@ -394,8 +417,11 @@ view model =
         , Form.wrapper <| Form.render model genderConfig
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
-        , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
-        , Form.wrapper <| Form.render model (cityConfig model.isOpenCity) ++ Form.renderWithoutLabel model (countryConfig model)
+        , Form.wrapper <|
+            Form.renderList model
+                [ cityConfig model.isOpenCity
+                , countryConfig model
+                ]
         , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
         , Form.wrapper <| Form.renderWithGroup userIcon model usernameConfig
         ]
