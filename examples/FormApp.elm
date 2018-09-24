@@ -330,7 +330,7 @@ cityConfig isOpen =
         False
         isOpen
         (Just "Seleziona")
-        []
+        [ class "formSmall" ]
         .city
         (Toggle City)
         (UpdateField City)
@@ -410,7 +410,11 @@ view model =
     in
     div
         [ class "wrapper" ]
-        [ node "link" [ Html.Attributes.rel "stylesheet", Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-latest.css" ] []
+        [ node "link"
+            [ Html.Attributes.rel "stylesheet"
+            , Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.2.3.css"
+            ]
+            []
         , Form.wrapper <| Form.render model usernameConfig
         , Form.wrapper <| Form.render model passwordConfig
         , Form.wrapper <| Form.render model noteConfig
