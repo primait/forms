@@ -235,7 +235,7 @@ usernameConfig : FormField Model Msg
 usernameConfig =
     Form.textConfig
         "user_name"
-        "User name"
+        (Just "User name & Password")
         [ minlength 3, maxlength 12 ]
         .username
         (UpdateField Username)
@@ -251,7 +251,7 @@ passwordConfig : FormField Model Msg
 passwordConfig =
     Form.passwordConfig
         "password"
-        "Password"
+        Nothing
         []
         .password
         (UpdateField Password)
@@ -266,7 +266,7 @@ noteConfig : FormField Model Msg
 noteConfig =
     Form.textareaConfig
         "note"
-        "Note"
+        (Just "Note")
         []
         .note
         (UpdateField Note)
@@ -280,7 +280,7 @@ genderConfig : FormField Model Msg
 genderConfig =
     Form.radioConfig
         "gender"
-        "Gender"
+        (Just "Gender")
         []
         .gender
         (UpdateField Gender)
@@ -297,7 +297,7 @@ privacyConfig : FormField Model Msg
 privacyConfig =
     Form.checkboxConfig
         "privacy"
-        "Privacy"
+        (Just "Privacy")
         []
         .privacy
         (UpdateFlag Privacy)
@@ -311,7 +311,7 @@ visitedCountriesConfig : Model -> FormField Model Msg
 visitedCountriesConfig { visitedCountries } =
     Form.checkboxWithOptionsConfig
         "visited_countries"
-        "Visited countries"
+        (Just "Visited countries")
         []
         (List.map (\( label, slug, checked ) -> ( slug, checked )) << .visitedCountries)
         (UpdateCheckbox VisitedCountries)
@@ -326,7 +326,7 @@ cityConfig : Bool -> FormField Model Msg
 cityConfig isOpen =
     Form.selectConfig
         "city"
-        "City"
+        (Just "City")
         False
         isOpen
         (Just "Seleziona")
@@ -352,7 +352,7 @@ dateOfBirthConfig : Bool -> DatePicker.Model -> FormField Model Msg
 dateOfBirthConfig showDatePicker datepicker =
     Form.datepickerConfig
         "date_of_birth"
-        "Date of Birth"
+        (Just "Date of Birth")
         []
         .dateOfBirth
         (UpdateField DateOfBirth)
@@ -373,7 +373,7 @@ countryConfig { countryFilter, isOpenCountry } =
     in
     Form.autocompleteConfig
         "country"
-        "Country"
+        (Just "Country")
         isOpenCountry
         (Just "No results")
         []
@@ -415,19 +415,14 @@ view model =
             , Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.2.3.css"
             ]
             []
-        , Form.wrapper <| Form.render model usernameConfig
-        , Form.wrapper <| Form.render model passwordConfig
+        , Form.wrapper <| (Form.render model usernameConfig ++ Form.render model passwordConfig)
         , Form.wrapper <| Form.render model noteConfig
         , Form.wrapper <| Form.render model genderConfig
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
-        , Form.wrapper <|
-            Form.renderList model
-                [ cityConfig model.isOpenCity
-                , countryConfig model
-                ]
+        , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
+        , Form.wrapper <| Form.render model (countryConfig model)
         , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
-        , Form.wrapper <| Form.renderWithGroup userIcon model usernameConfig
         ]
 
 

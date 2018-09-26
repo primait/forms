@@ -4,7 +4,7 @@ module Prima.Form exposing
     , AutocompleteOption
     , autocompleteConfig
     , datepickerConfig
-    , render, renderWithGroup, renderList, wrapper
+    , render, renderWithGroup, wrapper
     , isValid
     )
 
@@ -34,7 +34,7 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 
 # Render a FormField
 
-@docs render, renderWithGroup, renderList, wrapper
+@docs render, renderWithGroup, wrapper
 
 
 # Validate a FormField
@@ -95,7 +95,7 @@ type FormFieldConfig model msg
 
 type alias TextConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
@@ -107,7 +107,7 @@ type alias TextConfig model msg =
 
 type alias PasswordConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
@@ -119,7 +119,7 @@ type alias PasswordConfig model msg =
 
 type alias TextareaConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
@@ -131,7 +131,7 @@ type alias TextareaConfig model msg =
 
 type alias RadioConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
@@ -158,7 +158,7 @@ type alias RadioOption =
 
 type alias CheckboxConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> Bool
     , tagger : Bool -> msg
@@ -170,7 +170,7 @@ type alias CheckboxConfig model msg =
 
 type alias CheckboxWithOptionsConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> List ( String, Bool )
     , tagger : String -> Bool -> msg
@@ -198,7 +198,7 @@ type alias CheckboxOption =
 
 type alias SelectConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , isDisabled : Bool
     , isOpen : Bool
     , placeholder : Maybe String
@@ -228,7 +228,7 @@ type alias SelectOption =
 
 type alias DatepickerConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , attrs : List (Attribute msg)
     , reader : model -> Maybe String
     , tagger : Maybe String -> msg
@@ -243,7 +243,7 @@ type alias DatepickerConfig model msg =
 
 type alias AutocompleteConfig model msg =
     { slug : String
-    , label : String
+    , label : Maybe String
     , isOpen : Bool
     , noResults : Maybe String
     , attrs : List (Attribute msg)
@@ -303,21 +303,21 @@ type alias AutocompleteOption =
             ]
 
 -}
-textConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
+textConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
 textConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
     FormField <| FormFieldTextConfig (TextConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
 
 
 {-| Input password configuration method. See `textConfig` for configuration options.
 -}
-passwordConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
+passwordConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
 passwordConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
     FormField <| FormFieldPasswordConfig (PasswordConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
 
 
 {-| Textarea configuration method. See `textConfig` for configuration options.
 -}
-textareaConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
+textareaConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
 textareaConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
     FormField <| FormFieldTextareaConfig (TextareaConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
 
@@ -353,7 +353,7 @@ textareaConfig slug label attrs reader tagger onFocus onBlur forceShowError vali
             [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 -}
-radioConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> Bool -> List (Validation model) -> FormField model msg
+radioConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> Bool -> List (Validation model) -> FormField model msg
 radioConfig slug label attrs reader tagger onFocus onBlur options forceShowError validations =
     FormField <| FormFieldRadioConfig (RadioConfig slug label attrs reader tagger onFocus onBlur options forceShowError) validations
 
@@ -389,7 +389,7 @@ radioConfig slug label attrs reader tagger onFocus onBlur options forceShowError
             []
 
 -}
-checkboxConfig : String -> String -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
+checkboxConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
 checkboxConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
     FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
 
@@ -426,7 +426,7 @@ checkboxConfig slug label attrs reader tagger onFocus onBlur forceShowError vali
             []
 
 -}
-checkboxWithOptionsConfig : String -> String -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> Bool -> List (Validation model) -> FormField model msg
+checkboxWithOptionsConfig : String -> Maybe String -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> Bool -> List (Validation model) -> FormField model msg
 checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options forceShowError validations =
     FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options forceShowError) validations
 
@@ -471,7 +471,7 @@ checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options 
             [ NotEmpty "Empty value is not acceptable." ]
 
 -}
-selectConfig : String -> String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Bool -> List (Validation model) -> FormField model msg
+selectConfig : String -> Maybe String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Bool -> List (Validation model) -> FormField model msg
 selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options forceShowError validations =
     FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options forceShowError) validations
 
@@ -508,7 +508,7 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
           ...
 
 -}
-datepickerConfig : String -> String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> Bool -> List (Validation model) -> FormField model msg
+datepickerConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> Bool -> List (Validation model) -> FormField model msg
 datepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker forceShowError validations =
     FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker forceShowError) validations
 
@@ -557,7 +557,7 @@ datepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur 
             [ NotEmpty "Empty value is not acceptable." ]
 
 -}
-autocompleteConfig : String -> String -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> Bool -> List (Validation model) -> FormField model msg
+autocompleteConfig : String -> Maybe String -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> Bool -> List (Validation model) -> FormField model msg
 autocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError validations =
     FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError) validations
 
@@ -679,68 +679,6 @@ renderWithGroup groupsContent model (FormField opaqueConfig) =
             ]
 
 
-{-| Method for rendering multiple `FormField` configurations. Used to render more elements on the same row.
--}
-renderList : model -> List (FormField model msg) -> List (Html msg)
-renderList model configs =
-    case configs of
-        head :: tail ->
-            ((++) (render model head)
-                << List.concat
-                << List.map (renderListItem model)
-            )
-                tail
-
-        _ ->
-            []
-
-
-renderListItem : model -> FormField model msg -> List (Html msg)
-renderListItem model (FormField opaqueConfig) =
-    let
-        valid =
-            validate model opaqueConfig
-
-        pristine =
-            isPristine model opaqueConfig
-
-        errors =
-            (renderIf ((not valid && not pristine) || forceShowError opaqueConfig)
-                << renderError
-                << String.join " "
-                << pickError model
-            )
-                opaqueConfig
-    in
-    case opaqueConfig of
-        FormFieldTextConfig config validation ->
-            renderInput model config validation ++ [ errors ]
-
-        FormFieldPasswordConfig config validation ->
-            renderPassword model config validation ++ [ errors ]
-
-        FormFieldTextareaConfig config validation ->
-            renderInput model config validation ++ [ errors ]
-
-        FormFieldRadioConfig config validation ->
-            renderRadio model config validation ++ [ errors ]
-
-        FormFieldCheckboxConfig config validation ->
-            renderCheckbox model config validation ++ [ errors ]
-
-        FormFieldCheckboxWithOptionsConfig config validation ->
-            renderCheckboxWithOptions model config validation ++ [ errors ]
-
-        FormFieldSelectConfig config validation ->
-            renderSelect model config validation ++ [ errors ]
-
-        FormFieldDatepickerConfig config validation ->
-            renderDatepicker model config validation ++ [ errors ]
-
-        FormFieldAutocompleteConfig config validation ->
-            renderAutocomplete model config validation ++ [ errors ]
-
-
 {-| Wrapper for a FormField rendered with `render` function.
 -}
 wrapper : List (Html msg) -> Html msg
@@ -756,14 +694,19 @@ groupWrapper =
         [ class "m-form__field__group" ]
 
 
-renderLabel : String -> String -> Html msg
-renderLabel slug label =
-    Html.label
-        [ for slug
-        , class "a-form__field__label"
-        ]
-        [ text label
-        ]
+renderLabel : String -> Maybe String -> Html msg
+renderLabel slug theLabel =
+    case theLabel of
+        Nothing ->
+            text ""
+
+        Just label ->
+            Html.label
+                [ for slug
+                , class "a-form__field__label"
+                ]
+                [ text label
+                ]
 
 
 renderError : String -> Html msg
