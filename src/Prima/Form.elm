@@ -813,8 +813,21 @@ renderRadio model ({ slug, label, options } as config) validations =
     let
         valid =
             validate model (FormFieldRadioConfig config validations)
+
+        isVertical =
+            List.any (hasReachedCharactersLimit << .label) options
+
+        hasReachedCharactersLimit str =
+            String.length str >= 35
     in
-    (List.concat << List.map (renderRadioOption model config)) options
+    [ div
+        [ classList
+            [ ( "a-form__field__radioOptions", True )
+            , ( "is-vertical", isVertical )
+            ]
+        ]
+        ((List.concat << List.map (renderRadioOption model config)) options)
+    ]
 
 
 renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html msg)

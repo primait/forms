@@ -293,6 +293,23 @@ genderConfig =
         [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 
+genderVerticalConfig : FormField Model Msg
+genderVerticalConfig =
+    Form.radioConfig
+        "gender"
+        (Just "Gender")
+        []
+        .gender
+        (UpdateField Gender)
+        Focus
+        Blur
+        [ RadioOption "Always Male, but with more, more characters" "male"
+        , RadioOption "Always Female, but with longer label" "female"
+        ]
+        False
+        [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
+
+
 privacyConfig : FormField Model Msg
 privacyConfig =
     Form.checkboxConfig
@@ -412,12 +429,13 @@ view model =
         [ class "wrapper" ]
         [ node "link"
             [ Html.Attributes.rel "stylesheet"
-            , Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.2.3.css"
+            , Html.Attributes.href "http://0.0.0.0:8080/prima.css"
             ]
             []
         , Form.wrapper <| (Form.render model usernameConfig ++ Form.render model passwordConfig)
         , Form.wrapper <| Form.render model noteConfig
         , Form.wrapper <| Form.render model genderConfig
+        , Form.wrapper <| Form.render model genderVerticalConfig
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
