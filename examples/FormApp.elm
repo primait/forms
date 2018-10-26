@@ -70,17 +70,17 @@ type alias Slug =
 
 initialDate : Date
 initialDate =
-    dateFromFields 2018 (intToMonth 1) 1 0 0 0 0
+    dateFromFields 2018 (intToMonth 5) 1 0 0 0 0
 
 
 lowDate : Date
 lowDate =
-    dateFromFields 2018 (intToMonth 9) 15 0 0 0 0
+    dateFromFields 2018 (intToMonth 1) 1 0 0 0 0
 
 
 highDate : Date
 highDate =
-    dateFromFields 2018 (intToMonth 10) 28 0 0 0 0
+    dateFromFields 2019 (intToMonth 12) 31 0 0 0 0
 
 
 initialModel : Model
@@ -94,7 +94,7 @@ initialModel =
         False
         False
         Nothing
-        (DatePicker.init initialDate ( 2018, 2050 ) (Just ( lowDate, highDate )))
+        (DatePicker.init initialDate ( lowDate, highDate ))
         True
         Nothing
         Nothing
@@ -183,7 +183,7 @@ update msg model =
                 , dateOfBirthDP =
                     case (unwrap << Maybe.map (Result.toMaybe << Date.fromString)) value of
                         Just date ->
-                            DatePicker.init date ( 2018, 2050 ) (Just ( lowDate, highDate ))
+                            DatePicker.init date ( lowDate, highDate )
 
                         _ ->
                             model.dateOfBirthDP
@@ -198,7 +198,11 @@ update msg model =
                 updatedInstance =
                     DatePicker.update dpMsg model.dateOfBirthDP
             in
-            { model | dateOfBirthDP = updatedInstance, dateOfBirth = (Just << Date.Format.format "%d/%m/%Y" << DatePicker.selectedDate) updatedInstance } ! []
+            { model
+                | dateOfBirthDP = updatedInstance
+                , dateOfBirth = (Just << Date.Format.format "%d/%m/%Y" << DatePicker.selectedDate) updatedInstance
+            }
+                ! []
 
         UpdateAutocomplete Country value ->
             { model | countryFilter = value, isOpenCountry = True } ! []
@@ -429,7 +433,7 @@ view model =
         [ class "wrapper" ]
         [ node "link"
             [ Html.Attributes.rel "stylesheet"
-            , Html.Attributes.href "http://0.0.0.0:8080/prima.css"
+            , Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.4.8.css"
             ]
             []
         , Form.wrapper <| (Form.render model usernameConfig ++ Form.render model passwordConfig)
