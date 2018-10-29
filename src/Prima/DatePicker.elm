@@ -24,7 +24,7 @@ import Html.Events exposing (onClick)
 type alias Model =
     { date : Date
     , selectingYear : Bool
-    , daysPickerRange : List Date
+    , daysPickerRange : ( Date, Date )
     }
 
 
@@ -34,7 +34,7 @@ init : Date -> ( Date, Date ) -> Model
 init date daysRange =
     { date = adjustInitialDate date daysRange
     , selectingYear = False
-    , daysPickerRange = (List.reverse << fromDateRangeToList) daysRange
+    , daysPickerRange = daysRange
     }
 
 
@@ -135,11 +135,15 @@ fromDateRangeToList ( high, low ) =
 
 updateSelectedYear : Model -> Date -> Model
 updateSelectedYear model day =
-    if List.member day model.daysPickerRange then
+    let
+        availableDates =
+            (List.reverse << fromDateRangeToList) model.daysPickerRange
+    in
+    if List.member day availableDates then
         { model | date = day, selectingYear = False }
 
     else
-        case List.head <| List.filter (\d -> year d == year day) model.daysPickerRange of
+        case (List.head << List.filter (\d -> year d == year day)) availableDates of
             Nothing ->
                 { model | selectingYear = False }
 
@@ -149,11 +153,15 @@ updateSelectedYear model day =
 
 updateSelectedMonth : Model -> Date -> Model
 updateSelectedMonth model day =
-    if List.member day model.daysPickerRange then
+    let
+        availableDates =
+            (List.reverse << fromDateRangeToList) model.daysPickerRange
+    in
+    if List.member day availableDates then
         { model | date = day }
 
     else
-        case List.head <| List.filter (\d -> month d == month day) model.daysPickerRange of
+        case List.head <| List.filter (\d -> month d == month day) availableDates of
             Nothing ->
                 model
 
@@ -163,7 +171,11 @@ updateSelectedMonth model day =
 
 updateSelectedDay : Model -> Date -> Model
 updateSelectedDay model day =
-    if List.member day model.daysPickerRange then
+    let
+        availableDates =
+            (List.reverse << fromDateRangeToList) model.daysPickerRange
+    in
+    if List.member day availableDates then
         { model | date = day }
 
     else
@@ -224,19 +236,19 @@ weekDays =
 
 
 monthDays : Model -> Html Msg
-monthDays model =
+monthDays ({ date, daysPickerRange } as model) =
     let
         currentYear =
-            year model.date
+            Date.year date
 
         currentMonth =
-            month model.date
+            Date.month date
 
         daysCount =
             daysInMonth currentYear currentMonth
 
         weekDay =
-            isoDayOfWeek <| dayOfWeek <| toFirstOfMonth <| model.date
+            (isoDayOfWeek << dayOfWeek << toFirstOfMonth) date
 
         leftPadding =
             weekDay - 1
@@ -248,18 +260,25 @@ monthDays model =
             chunks 7 (List.repeat leftPadding 0 ++ List.range 1 daysCount ++ List.repeat rightPadding 0)
 
         daysThisMonth =
-            List.filter (\d -> month d == currentMonth && year d == currentYear) model.daysPickerRange
+            (List.filter
+                (\date ->
+                    Date.month date == currentMonth && Date.year date == currentYear
+                )
+                << List.reverse
+                << fromDateRangeToList
+            )
+                daysPickerRange
 
         availableDays =
-            List.map day daysThisMonth
+            List.map Date.day daysThisMonth
 
         disabledDaysInMonth =
-            List.filter (not << flip List.member availableDays) <| List.range 1 daysCount
+            (List.filter (not << flip List.member availableDays) << List.range 1) daysCount
     in
     div
         [ class "a-datepicker__picker__monthDays"
         ]
-        (List.map (\week -> weekRow week (day model.date) disabledDaysInMonth) weeks)
+        (List.map (\week -> weekRow week (Date.day date) disabledDaysInMonth) weeks)
 
 
 weekRow : List Int -> Int -> List Int -> Html Msg
@@ -314,11 +333,8 @@ picker model =
 yearPicker : Model -> Html Msg
 yearPicker ({ daysPickerRange } as model) =
     let
-        lowerBound =
-            (Maybe.withDefault 1910 << Maybe.map Date.year << List.head) daysPickerRange
-
-        upperBound =
-            (Maybe.withDefault 2100 << Maybe.map Date.year << List.head << List.reverse) daysPickerRange
+        ( lowerBound, upperBound ) =
+            daysPickerRange
     in
     div
         [ class "a-datepicker__yearPicker" ]
@@ -326,7 +342,7 @@ yearPicker ({ daysPickerRange } as model) =
             [ class "a-datepicker__yearPicker__scroller" ]
             [ div
                 [ class "a-datepicker__yearPicker__scroller__list" ]
-                (List.map (\y -> yearButton y (year model.date)) <| List.range lowerBound upperBound)
+                (List.map (\y -> yearButton y (year model.date)) <| List.range (Date.year lowerBound) (Date.year upperBound))
             ]
         ]
 
