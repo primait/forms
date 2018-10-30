@@ -47,7 +47,7 @@ selectedDate model =
 
 adjustInitialDate : Date -> ( Date, Date ) -> Date
 adjustInitialDate day ( low, high ) =
-    if DateCompare.is3 DateCompare.Between day low high then
+    if DateCompare.is3 DateCompare.BetweenOpen day low high then
         day
 
     else
@@ -136,46 +136,48 @@ fromDateRangeToList ( high, low ) =
 updateSelectedYear : Model -> Date -> Model
 updateSelectedYear model day =
     let
-        availableDates =
-            (List.reverse << fromDateRangeToList) model.daysPickerRange
+        ( low, high ) =
+            model.daysPickerRange
+
+        year =
+            Date.year day
+
+        lowYear =
+            Date.year low
+
+        highYear =
+            Date.year high
     in
-    if List.member day availableDates then
+    if DateCompare.is3 DateCompare.BetweenOpen day low high then
+        { model | date = day, selectingYear = False }
+
+    else if lowYear <= year && year <= highYear then
         { model | date = day, selectingYear = False }
 
     else
-        case (List.head << List.filter (\d -> year d == year day)) availableDates of
-            Nothing ->
-                { model | selectingYear = False }
-
-            Just day ->
-                { model | date = day, selectingYear = False }
+        { model | selectingYear = False }
 
 
 updateSelectedMonth : Model -> Date -> Model
 updateSelectedMonth model day =
     let
-        availableDates =
-            (List.reverse << fromDateRangeToList) model.daysPickerRange
+        ( low, high ) =
+            model.daysPickerRange
     in
-    if List.member day availableDates then
+    if DateCompare.is3 DateCompare.BetweenOpen day low high then
         { model | date = day }
 
     else
-        case List.head <| List.filter (\d -> month d == month day) availableDates of
-            Nothing ->
-                model
-
-            Just day ->
-                { model | date = day }
+        model
 
 
 updateSelectedDay : Model -> Date -> Model
 updateSelectedDay model day =
     let
-        availableDates =
-            (List.reverse << fromDateRangeToList) model.daysPickerRange
+        ( low, high ) =
+            model.daysPickerRange
     in
-    if List.member day availableDates then
+    if DateCompare.is3 DateCompare.BetweenOpen day low high then
         { model | date = day }
 
     else
@@ -232,7 +234,12 @@ weekDays : Html Msg
 weekDays =
     div
         [ class "a-datepicker__picker__weekDays" ]
-        (List.map (\day -> span [] [ text day ]) [ "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom" ])
+        (List.map
+            (\day ->
+                span [] [ text day ]
+            )
+            [ "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom" ]
+        )
 
 
 monthDays : Model -> Html Msg
