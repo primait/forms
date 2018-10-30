@@ -11,6 +11,7 @@ import Date.Extra.Compare as DateCompare
 import Date.Extra.Config exposing (Config)
 import Date.Extra.Config.Config_en_gb exposing (config)
 import Date.Extra.Core exposing (daysInMonth, intToMonth, isoDayOfWeek, toFirstOfMonth)
+import Date.Extra.Create exposing (dateFromFields)
 import Date.Extra.Duration as Duration
 import Date.Extra.Field as Field
 import Date.Extra.Format as DateFormat
@@ -28,7 +29,7 @@ type alias Model =
     }
 
 
-{-| Get initial time picker model by passing date and a main color (in hex format)
+{-| Get initial time picker model
 -}
 init : Date -> ( Date, Date ) -> Model
 init date daysRange =
@@ -251,6 +252,9 @@ monthDays ({ date, daysPickerRange } as model) =
         currentMonth =
             Date.month date
 
+        ( lowDate, highDate ) =
+            daysPickerRange
+
         daysCount =
             daysInMonth currentYear currentMonth
 
@@ -266,18 +270,28 @@ monthDays ({ date, daysPickerRange } as model) =
         weeks =
             chunks 7 (List.repeat leftPadding 0 ++ List.range 1 daysCount ++ List.repeat rightPadding 0)
 
-        daysThisMonth =
-            (List.filter
-                (\date ->
-                    Date.month date == currentMonth && Date.year date == currentYear
-                )
-                << List.reverse
-                << fromDateRangeToList
-            )
-                daysPickerRange
+        firstOfMonth =
+            dateFromFields currentYear currentMonth 1 0 0 0 0
+
+        lastOfMonth =
+            dateFromFields currentYear currentMonth daysCount 0 0 0 0
+
+        lowDayInMonth =
+            if DateCompare.is DateCompare.SameOrAfter lowDate firstOfMonth then
+                lowDate
+
+            else
+                firstOfMonth
+
+        highDayInMonth =
+            if DateCompare.is DateCompare.SameOrAfter highDate lastOfMonth then
+                lastOfMonth
+
+            else
+                highDate
 
         availableDays =
-            List.map Date.day daysThisMonth
+            (List.map Date.day << List.reverse << fromDateRangeToList) ( lowDayInMonth, highDayInMonth )
 
         disabledDaysInMonth =
             (List.filter (not << flip List.member availableDays) << List.range 1) daysCount
