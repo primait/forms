@@ -1,4 +1,4 @@
-module Prima.DatePicker exposing (init, Model, Msg(..), update, view, selectedDate)
+module Prima.DatePicker exposing (Model, Msg(..), init, selectedDate, update, view)
 
 {-|
 
@@ -50,7 +50,6 @@ adjustInitialDate : Date -> ( Date, Date ) -> Date
 adjustInitialDate day ( low, high ) =
     if DateCompare.is3 DateCompare.BetweenOpen day low high then
         day
-
     else
         low
 
@@ -151,10 +150,8 @@ updateSelectedYear model day =
     in
     if DateCompare.is3 DateCompare.BetweenOpen day low high then
         { model | date = day, selectingYear = False }
-
     else if lowYear <= year && year <= highYear then
         { model | date = day, selectingYear = False }
-
     else
         { model | selectingYear = False }
 
@@ -167,9 +164,10 @@ updateSelectedMonth model day =
     in
     if DateCompare.is3 DateCompare.BetweenOpen day low high then
         { model | date = day }
-
+    else if DateCompare.is DateCompare.SameOrAfter day high then
+        { model | date = high }
     else
-        model
+        { model | date = low }
 
 
 updateSelectedDay : Model -> Date -> Model
@@ -180,7 +178,6 @@ updateSelectedDay model day =
     in
     if DateCompare.is3 DateCompare.BetweenOpen day low high then
         { model | date = day }
-
     else
         model
 
@@ -193,7 +190,6 @@ view ({ selectingYear } as model) =
         [ header model
         , if selectingYear then
             yearPicker model
-
           else
             picker model
         ]
@@ -212,7 +208,6 @@ header ({ date, selectingYear } as model) =
             , onClick
                 (if selectingYear then
                     DaySelection
-
                  else
                     YearSelection
                 )
@@ -279,14 +274,12 @@ monthDays ({ date, daysPickerRange } as model) =
         lowDayInMonth =
             if DateCompare.is DateCompare.SameOrAfter lowDate firstOfMonth then
                 lowDate
-
             else
                 firstOfMonth
 
         highDayInMonth =
             if DateCompare.is DateCompare.SameOrAfter highDate lastOfMonth then
                 lastOfMonth
-
             else
                 highDate
 
@@ -322,7 +315,6 @@ dayCell dayNumber currentDay disabled =
             ]
             [ (text << toString) dayNumber
             ]
-
     else
         div
             [ class "a-datepicker__picker__days__item is-empty" ]
@@ -385,7 +377,6 @@ chunks : Int -> List a -> List (List a)
 chunks k xs =
     if List.length xs > k then
         List.take k xs :: chunks k (List.drop k xs)
-
     else
         [ xs ]
 
