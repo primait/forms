@@ -874,6 +874,7 @@ renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validati
          , (onClick << tagger << not << reader) model
          , onFocus config.onFocus
          , onBlur config.onBlur
+         , (checked << reader) model
          , (value << toString << reader) model
          , id slug
          , name slug
