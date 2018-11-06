@@ -433,7 +433,7 @@ view model =
         [ class "wrapper" ]
         [ node "link"
             [ Html.Attributes.rel "stylesheet"
-            , Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.4.8.css"
+            , Html.Attributes.href "https://d3be8952cnveif.cloudfront.net/css/pyxis-1.5.2.css"
             ]
             []
         , Form.wrapper <| (Form.render model usernameConfig ++ Form.render model passwordConfig)

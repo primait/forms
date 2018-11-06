@@ -711,9 +711,13 @@ renderLabel slug theLabel =
 
 renderError : String -> Html msg
 renderError error =
-    span
-        [ class "a-form__field__error" ]
-        [ text error ]
+    if (String.isEmpty << String.trim) error then
+        text ""
+
+    else
+        span
+            [ class "a-form__field__error" ]
+            [ text error ]
 
 
 renderInput : model -> TextConfig model msg -> List (Validation model) -> List (Html msg)
