@@ -574,7 +574,7 @@ render model (FormField opaqueConfig) =
             validate model opaqueConfig
 
         pristine =
-            isPristine model opaqueConfig
+            isUntouched model opaqueConfig
 
         errors =
             (List.singleton
@@ -625,7 +625,7 @@ renderWithGroup groupsContent model (FormField opaqueConfig) =
             validate model opaqueConfig
 
         pristine =
-            isPristine model opaqueConfig
+            isUntouched model opaqueConfig
 
         errors =
             (renderIf ((not valid && not pristine) || forceShowError opaqueConfig)
@@ -1229,8 +1229,13 @@ isValid model (FormField opaqueConfig) =
     isPristine model usernameConfig
 
 -}
-isPristine : model -> FormFieldConfig model msg -> Bool
-isPristine model opaqueConfig =
+isPristine : model -> FormField model msg -> Bool
+isPristine model (FormField opaqueConfig) =
+    isUntouched model opaqueConfig
+
+
+isUntouched : model -> FormFieldConfig model msg -> Bool
+isUntouched model opaqueConfig =
     case opaqueConfig of
         FormFieldTextConfig { reader } _ ->
             (isEmpty << Maybe.withDefault "" << reader) model
