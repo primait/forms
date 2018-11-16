@@ -1234,34 +1234,6 @@ isPristine model (FormField opaqueConfig) =
     isUntouched model opaqueConfig
 
 
-isUntouched : model -> FormFieldConfig model msg -> Bool
-isUntouched model opaqueConfig =
-    case opaqueConfig of
-        FormFieldTextConfig { reader } _ ->
-            (isEmpty << Maybe.withDefault "" << reader) model
-
-        FormFieldTextareaConfig { reader } _ ->
-            (isEmpty << Maybe.withDefault "" << reader) model
-
-        FormFieldPasswordConfig { reader } _ ->
-            (isEmpty << Maybe.withDefault "" << reader) model
-
-        FormFieldRadioConfig { reader } _ ->
-            (isEmpty << Maybe.withDefault "" << reader) model
-
-        FormFieldSelectConfig { reader } _ ->
-            (isEmpty << Maybe.withDefault "" << reader) model
-
-        FormFieldAutocompleteConfig { choiceReader } _ ->
-            (isEmpty << Maybe.withDefault "" << choiceReader) model
-
-        FormFieldDatepickerConfig { reader } _ ->
-            (isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
-
-        _ ->
-            True
-
-
 validate : model -> FormFieldConfig model msg -> Bool
 validate model opaqueConfig =
     List.all (validateRule model opaqueConfig) (pickValidationRules opaqueConfig)
@@ -1314,6 +1286,34 @@ validateRule model config validation =
 
         ( Custom validator _, _ ) ->
             validator model
+
+
+isUntouched : model -> FormFieldConfig model msg -> Bool
+isUntouched model opaqueConfig =
+    case opaqueConfig of
+        FormFieldTextConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldTextareaConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldPasswordConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldRadioConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldSelectConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << reader) model
+
+        FormFieldAutocompleteConfig { choiceReader } _ ->
+            (isEmpty << Maybe.withDefault "" << choiceReader) model
+
+        FormFieldDatepickerConfig { reader } _ ->
+            (isEmpty << Maybe.withDefault "" << Maybe.map toString << reader) model
+
+        _ ->
+            True
 
 
 pickValidationRules : FormFieldConfig model msg -> List (Validation model)
