@@ -6,6 +6,7 @@ module Prima.Form exposing
     , datepickerConfig
     , render, renderWithGroup, wrapper
     , isValid
+    , isPristine
     )
 
 {-| Package to build a Form using [Prima Assicurazioni](https://www.prima.it)'s Design System.
@@ -37,9 +38,11 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 @docs render, renderWithGroup, wrapper
 
 
-# Validate a FormField
+# Check status of a FormField
 
 @docs isValid
+
+@docs isPristine
 
 -}
 
@@ -1221,6 +1224,11 @@ isValid model (FormField opaqueConfig) =
     validate model opaqueConfig
 
 
+{-| Checks the `pristine` status of a `FormField`.
+
+    isPristine model usernameConfig
+
+-}
 isPristine : model -> FormFieldConfig model msg -> Bool
 isPristine model opaqueConfig =
     case opaqueConfig of
