@@ -59,6 +59,7 @@ import Html.Attributes
         , id
         , name
         , selected
+        , tabindex
         , type_
         , value
         )
@@ -105,6 +106,7 @@ type alias TextConfig model msg =
     , onFocus : msg
     , onBlur : msg
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -117,6 +119,7 @@ type alias PasswordConfig model msg =
     , onFocus : msg
     , onBlur : msg
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -129,6 +132,7 @@ type alias TextareaConfig model msg =
     , onFocus : msg
     , onBlur : msg
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -142,6 +146,7 @@ type alias RadioConfig model msg =
     , onBlur : msg
     , options : List RadioOption
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -168,6 +173,7 @@ type alias CheckboxConfig model msg =
     , onFocus : msg
     , onBlur : msg
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -181,6 +187,7 @@ type alias CheckboxWithOptionsConfig model msg =
     , onBlur : msg
     , options : List CheckboxOption
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -213,6 +220,7 @@ type alias SelectConfig model msg =
     , onBlur : msg
     , options : List SelectOption
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -241,6 +249,7 @@ type alias DatepickerConfig model msg =
     , instance : DatePicker.Model
     , showDatePicker : Bool
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -258,6 +267,7 @@ type alias AutocompleteConfig model msg =
     , onBlur : msg
     , options : List AutocompleteOption
     , forceShowError : Bool
+    , tabIndex : Maybe Int
     }
 
 
@@ -301,28 +311,29 @@ type alias AutocompleteOption =
             OnFocusUsername
             OnBlurUsername
             alwaysShowErrors
+            Nothing
             [ NotEmpty "Empty value is not acceptable."
             , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .username) "Value must be between 3 and 12 characters length."
             ]
 
 -}
-textConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
-textConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
-    FormField <| FormFieldTextConfig (TextConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
+textConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+textConfig slug label attrs reader tagger onFocus onBlur forceShowError tabIndex validations =
+    FormField <| FormFieldTextConfig (TextConfig slug label attrs reader tagger onFocus onBlur forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Input password configuration method. See `textConfig` for configuration options.
 -}
-passwordConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
-passwordConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
-    FormField <| FormFieldPasswordConfig (PasswordConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
+passwordConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+passwordConfig slug label attrs reader tagger onFocus onBlur forceShowError tabIndex validations =
+    FormField <| FormFieldPasswordConfig (PasswordConfig slug label attrs reader tagger onFocus onBlur forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Textarea configuration method. See `textConfig` for configuration options.
 -}
-textareaConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
-textareaConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
-    FormField <| FormFieldTextareaConfig (TextareaConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
+textareaConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+textareaConfig slug label attrs reader tagger onFocus onBlur forceShowError tabIndex validations =
+    FormField <| FormFieldTextareaConfig (TextareaConfig slug label attrs reader tagger onFocus onBlur forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Input Radio configuration method.
@@ -353,12 +364,13 @@ textareaConfig slug label attrs reader tagger onFocus onBlur forceShowError vali
             OnBlurGender
             alwaysShowErrors
             [ RadioOption "Male" "male" , RadioOption "Female" "female" ]
+            Nothing
             [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 -}
-radioConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> Bool -> List (Validation model) -> FormField model msg
-radioConfig slug label attrs reader tagger onFocus onBlur options forceShowError validations =
-    FormField <| FormFieldRadioConfig (RadioConfig slug label attrs reader tagger onFocus onBlur options forceShowError) validations
+radioConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> msg -> msg -> List RadioOption -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+radioConfig slug label attrs reader tagger onFocus onBlur options forceShowError tabIndex validations =
+    FormField <| FormFieldRadioConfig (RadioConfig slug label attrs reader tagger onFocus onBlur options forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Checkbox with single option configuration method.
@@ -389,12 +401,13 @@ radioConfig slug label attrs reader tagger onFocus onBlur options forceShowError
             OnFocusPrivacy
             OnBlurPrivacy
             alwaysShowErrors
+            Nothing
             []
 
 -}
-checkboxConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> Bool -> List (Validation model) -> FormField model msg
-checkboxConfig slug label attrs reader tagger onFocus onBlur forceShowError validations =
-    FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label attrs reader tagger onFocus onBlur forceShowError) validations
+checkboxConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Bool) -> (Bool -> msg) -> msg -> msg -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+checkboxConfig slug label attrs reader tagger onFocus onBlur forceShowError tabIndex validations =
+    FormField <| FormFieldCheckboxConfig (CheckboxConfig slug label attrs reader tagger onFocus onBlur forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Checkbox with multiple option configuration method.
@@ -426,12 +439,13 @@ checkboxConfig slug label attrs reader tagger onFocus onBlur forceShowError vali
             OnBlurVisitedCountries
             (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) options)
             alwaysShowErrors
+            Nothing
             []
 
 -}
-checkboxWithOptionsConfig : String -> Maybe String -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> Bool -> List (Validation model) -> FormField model msg
-checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options forceShowError validations =
-    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options forceShowError) validations
+checkboxWithOptionsConfig : String -> Maybe String -> List (Attribute msg) -> (model -> List ( String, Bool )) -> (String -> Bool -> msg) -> msg -> msg -> List CheckboxOption -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options forceShowError tabIndex validations =
+    FormField <| FormFieldCheckboxWithOptionsConfig (CheckboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Select configuration method.
@@ -471,12 +485,13 @@ checkboxWithOptionsConfig slug label attrs reader tagger onFocus onBlur options 
             OnBlurCity
             (List.sortBy .label [ SelectOption "Milan" "MI" , SelectOption "Turin" "TO" , SelectOption "Rome" "RO" , SelectOption "Naples" "NA" , SelectOption "Genoa" "GE" ] )
             alwaysShowErrors
+            Nothing
             [ NotEmpty "Empty value is not acceptable." ]
 
 -}
-selectConfig : String -> Maybe String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Bool -> List (Validation model) -> FormField model msg
-selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options forceShowError validations =
-    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options forceShowError) validations
+selectConfig : String -> Maybe String -> Bool -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Bool -> msg) -> (Maybe String -> msg) -> msg -> msg -> List SelectOption -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options forceShowError tabIndex validations =
+    FormField <| FormFieldSelectConfig (SelectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger optionTagger onFocus onBlur options forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Datepicker configuration method.
@@ -511,9 +526,9 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
           ...
 
 -}
-datepickerConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> Bool -> List (Validation model) -> FormField model msg
-datepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker forceShowError validations =
-    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker forceShowError) validations
+datepickerConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+datepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker forceShowError tabIndex validations =
+    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Autocomplete configuration method.
@@ -557,12 +572,13 @@ datepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur 
             OnBlurCountry
             alwaysShowErrors
             (List.filter (String.contains lowerFilter << String.toLower << .label) <| [ AutocompleteOption "Italy" "ITA", AutocompleteOption "Brasil" "BRA", AutocompleteOption "France" "FRA", AutocompleteOption "England" "ENG", AutocompleteOption "USA" "USA", AutocompleteOption "Japan" "JAP" ])
+            Nothing
             [ NotEmpty "Empty value is not acceptable." ]
 
 -}
-autocompleteConfig : String -> Maybe String -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> Bool -> List (Validation model) -> FormField model msg
-autocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError validations =
-    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError) validations
+autocompleteConfig : String -> Maybe String -> Bool -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (model -> Maybe String) -> (Maybe String -> msg) -> (Maybe String -> msg) -> msg -> msg -> List AutocompleteOption -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+autocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError tabIndex validations =
+    FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
 {-| Method for rendering a `FormField`
@@ -724,7 +740,7 @@ renderError error =
 
 
 renderInput : model -> TextConfig model msg -> List (Validation model) -> List (Html msg)
-renderInput model ({ reader, tagger, slug, label, attrs } as config) validations =
+renderInput model ({ reader, tagger, slug, label, attrs, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldTextConfig config validations)
@@ -749,13 +765,14 @@ renderInput model ({ reader, tagger, slug, label, attrs } as config) validations
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         []
     ]
 
 
 renderPassword : model -> PasswordConfig model msg -> List (Validation model) -> List (Html msg)
-renderPassword model ({ reader, tagger, slug, label, attrs } as config) validations =
+renderPassword model ({ reader, tagger, slug, label, attrs, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldPasswordConfig config validations)
@@ -780,13 +797,14 @@ renderPassword model ({ reader, tagger, slug, label, attrs } as config) validati
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         []
     ]
 
 
 renderTextarea : model -> TextareaConfig model msg -> List (Validation model) -> List (Html msg)
-renderTextarea model ({ reader, tagger, slug, label, attrs } as config) validations =
+renderTextarea model ({ reader, tagger, slug, label, attrs, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldTextareaConfig config validations)
@@ -810,13 +828,14 @@ renderTextarea model ({ reader, tagger, slug, label, attrs } as config) validati
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         []
     ]
 
 
 renderRadio : model -> RadioConfig model msg -> List (Validation model) -> List (Html msg)
-renderRadio model ({ slug, label, options } as config) validations =
+renderRadio model ({ slug, label, options, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldRadioConfig config validations)
@@ -833,12 +852,12 @@ renderRadio model ({ slug, label, options } as config) validations =
             , ( "is-vertical", isVertical )
             ]
         ]
-        ((List.concat << List.map (renderRadioOption model config)) options)
+        ((List.concat << List.indexedMap (\index option -> renderRadioOption model config index option)) options)
     ]
 
 
-renderRadioOption : model -> RadioConfig model msg -> RadioOption -> List (Html msg)
-renderRadioOption model ({ reader, tagger, slug, label, options, attrs } as config) option =
+renderRadioOption : model -> RadioConfig model msg -> Int -> RadioOption -> List (Html msg)
+renderRadioOption model ({ reader, tagger, slug, label, options, attrs, tabIndex } as config) index option =
     let
         optionSlug =
             (String.join "_" << List.map (String.trim << String.toLower)) [ slug, option.slug ]
@@ -859,6 +878,7 @@ renderRadioOption model ({ reader, tagger, slug, label, options, attrs } as conf
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex << (+) index)) tabIndex
         )
         []
     , Html.label
@@ -871,7 +891,7 @@ renderRadioOption model ({ reader, tagger, slug, label, options, attrs } as conf
 
 
 renderCheckbox : model -> CheckboxConfig model msg -> List (Validation model) -> List (Html msg)
-renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validations =
+renderCheckbox model ({ reader, tagger, slug, label, attrs, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldCheckboxConfig config validations)
@@ -890,6 +910,7 @@ renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validati
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         []
     , Html.label
@@ -902,16 +923,16 @@ renderCheckbox model ({ reader, tagger, slug, label, attrs } as config) validati
 
 
 renderCheckboxWithOptions : model -> CheckboxWithOptionsConfig model msg -> List (Validation model) -> List (Html msg)
-renderCheckboxWithOptions model ({ slug, label, options } as config) validations =
+renderCheckboxWithOptions model ({ slug, label, options, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldCheckboxWithOptionsConfig config validations)
     in
-    (List.concat << List.map (renderCheckboxOption model config)) options
+    (List.concat << List.indexedMap (\index option -> renderCheckboxOption model config index option)) options
 
 
-renderCheckboxOption : model -> CheckboxWithOptionsConfig model msg -> CheckboxOption -> List (Html msg)
-renderCheckboxOption model ({ reader, tagger, attrs } as config) option =
+renderCheckboxOption : model -> CheckboxWithOptionsConfig model msg -> Int -> CheckboxOption -> List (Html msg)
+renderCheckboxOption model ({ reader, tagger, attrs, tabIndex } as config) index option =
     let
         slug =
             (String.join "_" << List.map (String.trim << String.toLower)) [ config.slug, option.slug ]
@@ -929,6 +950,7 @@ renderCheckboxOption model ({ reader, tagger, attrs } as config) option =
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex << (+) index)) tabIndex
         )
         []
     , Html.label
@@ -941,7 +963,7 @@ renderCheckboxOption model ({ reader, tagger, attrs } as config) option =
 
 
 renderSelect : model -> SelectConfig model msg -> List (Validation model) -> List (Html msg)
-renderSelect model ({ slug, label, reader, optionTagger, attrs } as config) validations =
+renderSelect model ({ slug, label, reader, optionTagger, attrs, tabIndex } as config) validations =
     let
         options =
             case ( config.placeholder, config.isOpen ) of
@@ -973,6 +995,7 @@ renderSelect model ({ slug, label, reader, optionTagger, attrs } as config) vali
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         (List.map (renderSelectOption model config) options)
     ]
@@ -989,7 +1012,7 @@ renderSelectOption model { reader, slug, label } option =
 
 
 renderCustomSelect : model -> SelectConfig model msg -> List (Validation model) -> Html msg
-renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpen, attrs } as config) validations =
+renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpen, attrs, tabIndex } as config) validations =
     let
         options =
             case ( config.placeholder, isOpen ) of
@@ -1026,6 +1049,7 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
          , onBlur config.onBlur
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         [ span
             [ class "a-form__field__customSelect__status"
@@ -1053,7 +1077,7 @@ renderCustomSelectOption model { reader, optionTagger, slug, label } option =
 
 
 renderDatepicker : model -> DatepickerConfig model msg -> List (Validation model) -> List (Html msg)
-renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, instance, showDatePicker } as config) validations =
+renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, instance, showDatePicker, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldDatepickerConfig config validations)
@@ -1084,6 +1108,7 @@ renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, 
             ]
          ]
             ++ attrs
+            ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
         )
         []
     , (renderIf showDatePicker << Html.map datePickerTagger << DatePicker.view) instance
@@ -1110,7 +1135,7 @@ renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, 
 
 
 renderAutocomplete : model -> AutocompleteConfig model msg -> List (Validation model) -> List (Html msg)
-renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagger, slug, label, isOpen, noResults, attrs, options } as config) validations =
+renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagger, slug, label, isOpen, noResults, attrs, options, tabIndex } as config) validations =
     let
         valid =
             validate model (FormFieldAutocompleteConfig config validations)
@@ -1163,6 +1188,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
              ]
                 ++ attrs
                 ++ clickAttr
+                ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
             )
             []
         , ul
@@ -1178,7 +1204,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
 
 
 renderAutocompleteOption : model -> AutocompleteConfig model msg -> AutocompleteOption -> Html msg
-renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) option =
+renderAutocompleteOption model ({ choiceReader, choiceTagger, tabIndex } as config) option =
     li
         [ classList
             [ ( "a-form__field__autocomplete__list__item", True )

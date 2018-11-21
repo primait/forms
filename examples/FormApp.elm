@@ -246,6 +246,7 @@ usernameConfig =
         Focus
         Blur
         False
+        (Just 1)
         [ NotEmpty "Empty value is not acceptable."
         , Custom ((<=) 3 << String.length << Maybe.withDefault "" << .username) "Value must be between 3 and 12 characters length."
         ]
@@ -262,6 +263,7 @@ passwordConfig =
         Focus
         Blur
         False
+        (Just 2)
         [ NotEmpty "Empty value is not acceptable."
         ]
 
@@ -277,6 +279,7 @@ noteConfig =
         Focus
         Blur
         False
+        (Just 3)
         [ NotEmpty "Empty value is not acceptable." ]
 
 
@@ -294,13 +297,14 @@ genderConfig =
         , RadioOption "Female" "female"
         ]
         False
+        (Just 4)
         [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 
 genderVerticalConfig : FormField Model Msg
 genderVerticalConfig =
     Form.radioConfig
-        "gender"
+        "gender_vertical"
         (Just "Gender")
         []
         .gender
@@ -311,6 +315,7 @@ genderVerticalConfig =
         , RadioOption "Always Female, but with longer label" "female"
         ]
         False
+        (Just 5)
         [ Custom ((==) "female" << Maybe.withDefault "female" << .gender) "You must select `Female` to proceed." ]
 
 
@@ -325,6 +330,7 @@ privacyConfig =
         Focus
         Blur
         False
+        (Just 6)
         []
 
 
@@ -340,6 +346,7 @@ visitedCountriesConfig { visitedCountries } =
         Blur
         (List.map (\( label, slug, checked ) -> CheckboxOption label slug checked) visitedCountries)
         False
+        (Just 7)
         []
 
 
@@ -366,6 +373,7 @@ cityConfig isOpen =
             ]
         )
         False
+        (Just 8)
         [ NotEmpty "Empty value is not acceptable." ]
 
 
@@ -383,6 +391,7 @@ dateOfBirthConfig showDatePicker datepicker =
         datepicker
         showDatePicker
         False
+        (Just 9)
         [ Custom (Maybe.withDefault False << Maybe.map (always True) << .dateOfBirth) "This is not a valid date." ]
 
 
@@ -414,6 +423,7 @@ countryConfig { countryFilter, isOpenCountry } =
             |> List.filter (String.contains lowerFilter << String.toLower << .label)
         )
         False
+        (Just 10)
         [ NotEmpty "Empty value is not acceptable." ]
 
 
@@ -443,8 +453,8 @@ view model =
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
-        , Form.wrapper <| Form.render model (countryConfig model)
         , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
+        , Form.wrapper <| Form.render model (countryConfig model)
         ]
 
 
