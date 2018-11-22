@@ -779,7 +779,7 @@ renderInput model ({ reader, tagger, slug, label, attrs, tabIndex } as config) v
             validate model (FormFieldTextConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldTextConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldTextConfig config validations)
     in
     [ Html.input
         ([ type_ "text"
@@ -811,7 +811,7 @@ renderPassword model ({ reader, tagger, slug, label, attrs, tabIndex } as config
             validate model (FormFieldPasswordConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldPasswordConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldPasswordConfig config validations)
     in
     [ Html.input
         ([ type_ "password"
@@ -843,7 +843,7 @@ renderTextarea model ({ reader, tagger, slug, label, attrs, tabIndex } as config
             validate model (FormFieldTextareaConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldTextareaConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldTextareaConfig config validations)
     in
     [ Html.textarea
         ([ onInput (tagger << normalizeInput)
@@ -1010,7 +1010,7 @@ renderSelect model ({ slug, label, reader, optionTagger, attrs, tabIndex } as co
             validate model (FormFieldSelectConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldSelectConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldSelectConfig config validations)
     in
     [ renderCustomSelect model config validations
     , Html.select
@@ -1059,14 +1059,14 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
             validate model (FormFieldSelectConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldSelectConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldSelectConfig config validations)
 
         currentValue =
             options
                 |> List.filter (\option -> ((==) option.slug << Maybe.withDefault "" << reader) model)
                 |> List.map .label
                 |> List.head
-                |> Maybe.withDefault ""
+                |> Maybe.withDefault (Maybe.withDefault "" config.placeholder)
     in
     div
         ([ classList
@@ -1116,7 +1116,7 @@ renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, 
             validate model (FormFieldDatepickerConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldDatepickerConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldDatepickerConfig config validations)
 
         inputTextFormat str =
             (String.join "/" << List.reverse << String.split "-") str
@@ -1174,25 +1174,30 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
             validate model (FormFieldAutocompleteConfig config validations)
 
         pristine =
-            (not << validate model) (FormFieldAutocompleteConfig config [ NotEmpty "" ])
+            isUntouched model (FormFieldAutocompleteConfig config validations)
+
+        pickLabelByValue options value =
+            (List.head << List.map .label << List.filter ((==) value << .slug)) options
 
         valueAttr =
-            case choiceReader model of
-                Just val ->
-                    options
-                        |> List.filter (\option -> (Maybe.withDefault False << Maybe.map ((==) option.slug) << choiceReader) model)
-                        |> List.map .label
-                        |> List.head
-                        |> Maybe.withDefault ""
-                        |> value
+            case ( choiceReader model, isOpen ) of
+                ( Just currentValue, False ) ->
+                    (value << Maybe.withDefault "" << pickLabelByValue options) currentValue
 
-                Nothing ->
+                _ ->
                     (value << Maybe.withDefault "" << filterReader) model
 
         clickAttr =
             case choiceReader model of
-                Just _ ->
-                    [ (onClick << choiceTagger << normalizeInput) "" ]
+                Just currentValue ->
+                    [ (onClick
+                        << filterTagger
+                        << normalizeInput
+                        << Maybe.withDefault ""
+                        << pickLabelByValue options
+                      )
+                        currentValue
+                    ]
 
                 Nothing ->
                     []
