@@ -1188,8 +1188,13 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
             (List.head << List.map .label << List.filter ((==) value << .slug)) options
 
         valueAttr =
-            case ( choiceReader model, isOpen ) of
-                ( Just currentValue, False ) ->
+            case
+                ( choiceReader model
+                , choiceReader model == filterReader model
+                , isOpen
+                )
+            of
+                ( Just currentValue, False, False ) ->
                     (value << Maybe.withDefault "" << pickLabelByValue options) currentValue
 
                 _ ->
@@ -1199,7 +1204,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
             case choiceReader model of
                 Just currentValue ->
                     [ (onClick
-                        << filterTagger
+                        << choiceTagger
                         << normalizeInput
                         << Maybe.withDefault ""
                         << pickLabelByValue options
@@ -1233,7 +1238,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 ]
              ]
                 ++ attrs
-                ++ clickAttr
+                -- ++ clickAttr
                 ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
             )
             []
