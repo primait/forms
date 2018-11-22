@@ -1119,10 +1119,18 @@ renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, 
             isUntouched model (FormFieldDatepickerConfig config validations)
 
         inputTextFormat str =
-            (String.join "/" << List.reverse << String.split "-") str
+            (String.join "/"
+                << List.reverse
+                << String.split "-"
+            )
+                str
 
         inputDateFormat str =
-            (String.join "-" << List.reverse << String.split "/") str
+            (String.join "-"
+                << List.reverse
+                << String.split "/"
+            )
+                str
     in
     [ Html.input
         ([ type_ "text"
