@@ -29,6 +29,7 @@ import Date.Extra.Create exposing (dateFromFields)
 import Date.Format
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (onClick)
 import Prima.DatePicker as DatePicker
 import Prima.Form as Form
     exposing
@@ -95,7 +96,7 @@ initialModel =
         False
         Nothing
         (DatePicker.init initialDate ( lowDate, highDate ))
-        True
+        False
         Nothing
         Nothing
         False
@@ -129,6 +130,7 @@ type Msg
     | FetchDateToday Date
     | Focus
     | Blur
+    | ToggleDatePicker
 
 
 main : Program Never Model Msg
@@ -224,6 +226,9 @@ update msg model =
 
         Toggle City isOpen ->
             { model | isOpenCity = isOpen } ! []
+
+        ToggleDatePicker ->
+            { model | isVisibleDP = not model.isVisibleDP } ! []
 
         Focus ->
             model ! []
@@ -427,6 +432,15 @@ countryConfig { countryFilter, isOpenCountry } =
         [ NotEmpty "Empty value is not acceptable." ]
 
 
+staticHtml : Model -> FormField Model Msg
+staticHtml model =
+    Form.pureHtmlConfig
+        [ text "Lorem ipsum dolor"
+        , br [] []
+        , text "sit amet."
+        ]
+
+
 view : Model -> Html Msg
 view model =
     let
@@ -453,8 +467,13 @@ view model =
         , Form.wrapper <| Form.render model privacyConfig
         , Form.wrapper <| Form.render model (visitedCountriesConfig model)
         , Form.wrapper <| Form.render model (cityConfig model.isOpenCity)
-        , Form.wrapper <| Form.render model (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
+        , Form.wrapper <|
+            Form.renderWithGroup
+                [ a [ onClick ToggleDatePicker ] [ text "Show/Hide datepicker" ] ]
+                model
+                (dateOfBirthConfig model.isVisibleDP model.dateOfBirthDP)
         , Form.wrapper <| Form.render model (countryConfig model)
+        , Form.wrapper <| Form.render model (staticHtml model)
         ]
 
 

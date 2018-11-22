@@ -4,6 +4,7 @@ module Prima.Form exposing
     , AutocompleteOption
     , autocompleteConfig
     , datepickerConfig
+    , pureHtmlConfig
     , render, renderWithGroup, wrapper
     , isValid
     , isPristine
@@ -31,6 +32,11 @@ CSS classes to be changed, also forcing consistency in our ecosystem.
 @docs autocompleteConfig
 
 @docs datepickerConfig
+
+
+# Static components configuration
+
+@docs pureHtmlConfig
 
 
 # Render a FormField
@@ -95,6 +101,7 @@ type FormFieldConfig model msg
     | FormFieldSelectConfig (SelectConfig model msg) (List (Validation model))
     | FormFieldTextareaConfig (TextareaConfig model msg) (List (Validation model))
     | FormFieldTextConfig (TextConfig model msg) (List (Validation model))
+    | FormFieldPureHtmlConfig (PureHtmlConfig msg)
 
 
 type alias TextConfig model msg =
@@ -281,6 +288,11 @@ type alias AutocompleteConfig model msg =
 type alias AutocompleteOption =
     { label : String
     , slug : String
+    }
+
+
+type alias PureHtmlConfig msg =
+    { content : List (Html msg)
     }
 
 
@@ -581,6 +593,21 @@ autocompleteConfig slug label isOpen noResults attrs filterReader choiceReader f
     FormField <| FormFieldAutocompleteConfig (AutocompleteConfig slug label isOpen noResults attrs filterReader choiceReader filterTagger choiceTagger onFocus onBlur options forceShowError (Maybe.map ((*) 10) tabIndex)) validations
 
 
+{-| Static Html configuration method.
+
+    import Prima.Form as Form exposing (FormField, FormFieldConfig, Validation(..))
+    ...
+
+    staticHtmlConfig : List (Html Msg) -> FormField Model Msg
+    staticHtmlConfig content =
+      Form.pureHtmlConfig content
+
+-}
+pureHtmlConfig : List (Html msg) -> FormField model msg
+pureHtmlConfig content =
+    FormField <| FormFieldPureHtmlConfig (PureHtmlConfig content)
+
+
 {-| Method for rendering a `FormField`
 -}
 render : model -> FormField model msg -> List (Html msg)
@@ -628,6 +655,9 @@ render model (FormField opaqueConfig) =
 
         FormFieldAutocompleteConfig config validation ->
             renderLabel config.slug config.label :: renderAutocomplete model config validation
+
+        FormFieldPureHtmlConfig config ->
+            renderPureHtml config
     )
         ++ errors
 
@@ -696,6 +726,9 @@ renderWithGroup groupsContent model (FormField opaqueConfig) =
             [ renderLabel config.slug config.label
             , groupWrapper <| groupsContent ++ (renderAutocomplete model config validation ++ [ errors ])
             ]
+
+        FormFieldPureHtmlConfig config ->
+            renderPureHtml config
 
 
 {-| Wrapper for a FormField rendered with `render` function.
@@ -1225,6 +1258,11 @@ renderAutocompleteNoResults model { noResults } =
         ]
 
 
+renderPureHtml : PureHtmlConfig msg -> List (Html msg)
+renderPureHtml { content } =
+    content
+
+
 {-| Validation rules for a FormField.
 
     NotEmpty "This field cannot be empty."
@@ -1313,6 +1351,9 @@ validateRule model config validation =
         ( Custom validator _, _ ) ->
             validator model
 
+        ( _, FormFieldPureHtmlConfig config ) ->
+            True
+
 
 isUntouched : model -> FormFieldConfig model msg -> Bool
 isUntouched model opaqueConfig =
@@ -1371,6 +1412,9 @@ pickValidationRules opaqueConfig =
 
         FormFieldAutocompleteConfig _ validations ->
             validations
+
+        FormFieldPureHtmlConfig config ->
+            []
 
 
 pickError : model -> FormFieldConfig model msg -> List String
@@ -1442,6 +1486,9 @@ forceShowError opaqueConfig =
 
         FormFieldAutocompleteConfig { forceShowError } _ ->
             forceShowError
+
+        FormFieldPureHtmlConfig config ->
+            False
 
 
 renderIf : Bool -> Html msg -> Html msg
