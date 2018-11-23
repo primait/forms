@@ -1,13 +1,6 @@
 # Agnostic library for building Forms
 
-Provides a set of configuration options for building forms components. Here's a list of available components:
-- Input text
-- Textarea
-- Select
-- Radio
-- Checkbox (with single or multiple choices)
-- Datepicker
-- Autocomplete
+Provides a set of configuration options for building forms components.
 
 # Configuring fields
 
@@ -16,22 +9,23 @@ You can only reconstruct the original (opaque) type:
 `type FormField model msg
     = FormField (FormFieldConfig model msg)`
 
-By using one of this configuration methods:
-- `autocompleteConfig`
-- `checkboxConfig`
-- `checkboxWithOptionsConfig`
-- `datepickerConfig`
-- `radioConfig`
-- `selectConfig`
-- `textConfig`
+By using one of these configuration methods:
 
-Once configured, a field must be rendered by calling the `render` method.
+`textConfig`, `passwordConfig`, `textareaConfig`, `checkboxConfig`, `checkboxWithOptionsConfig`, `selectConfig`, `radioConfig`, `autocompleteConfig`, `datepickerConfig`, `pureHtmlConfig`
 
+
+Once configured, a field must be rendered by calling one of these methods:
+
+`render`, `renderWithGroup`, `wrapper`
+
+You can always check the status of a field by using:
+
+`isValid`, `isPristine`
 
 # Use example
-See `examples/FormApp.elm`
+See `examples/App.elm`
 
 # Running example
 - Run `elm-reactor`
 - Open `http://localhost:8000`
-- Navigate to `http://localhost:8000/examples/FormApp.elm`
+- Navigate to `http://localhost:8000/examples/App.elm`

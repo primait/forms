@@ -1092,18 +1092,24 @@ renderCustomSelect model ({ slug, label, reader, toggleTagger, isDisabled, isOpe
             ]
         , ul
             [ class "a-form__field__customSelect__list" ]
-            (List.map (renderCustomSelectOption model config) options)
+            (List.indexedMap
+                (\index option ->
+                    renderCustomSelectOption model config (Maybe.withDefault 0 tabIndex + index) option
+                )
+                options
+            )
         ]
 
 
-renderCustomSelectOption : model -> SelectConfig model msg -> SelectOption -> Html msg
-renderCustomSelectOption model { reader, optionTagger, slug, label } option =
+renderCustomSelectOption : model -> SelectConfig model msg -> Int -> SelectOption -> Html msg
+renderCustomSelectOption model { reader, optionTagger, slug, label } tabIndex option =
     li
         [ classList
             [ ( "a-form__field__customSelect__list__item", True )
             , ( "is-selected", ((==) option.slug << Maybe.withDefault "" << reader) model )
             ]
         , (onClick << optionTagger << normalizeInput) option.slug
+        , tabindex tabIndex
         ]
         [ text option.label
         ]
@@ -1245,7 +1251,7 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
         , ul
             [ class "a-form__field__autocomplete__list" ]
             (if List.length options > 0 then
-                List.map (renderAutocompleteOption model config) options
+                List.indexedMap (\index option -> renderAutocompleteOption model config (Maybe.withDefault 0 tabIndex + index) option) options
 
              else
                 (List.singleton << renderAutocompleteNoResults model) config
@@ -1254,14 +1260,15 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
     ]
 
 
-renderAutocompleteOption : model -> AutocompleteConfig model msg -> AutocompleteOption -> Html msg
-renderAutocompleteOption model ({ choiceReader, choiceTagger, tabIndex } as config) option =
+renderAutocompleteOption : model -> AutocompleteConfig model msg -> Int -> AutocompleteOption -> Html msg
+renderAutocompleteOption model ({ choiceReader, choiceTagger } as config) tabIndex option =
     li
         [ classList
             [ ( "a-form__field__autocomplete__list__item", True )
             , ( "is-selected", ((==) option.slug << Maybe.withDefault "" << choiceReader) model )
             ]
         , (onClick << choiceTagger << normalizeInput) option.slug
+        , tabindex tabIndex
         ]
         [ text option.label
         ]
