@@ -1205,21 +1205,6 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
 
                 _ ->
                     (value << Maybe.withDefault "" << filterReader) model
-
-        clickAttr =
-            case choiceReader model of
-                Just currentValue ->
-                    [ (onClick
-                        << choiceTagger
-                        << normalizeInput
-                        << Maybe.withDefault ""
-                        << pickLabelByValue options
-                      )
-                        currentValue
-                    ]
-
-                Nothing ->
-                    []
     in
     [ div
         [ classList
@@ -1244,7 +1229,6 @@ renderAutocomplete model ({ filterReader, filterTagger, choiceReader, choiceTagg
                 ]
              ]
                 ++ attrs
-                -- ++ clickAttr
                 ++ (Maybe.withDefault [] << Maybe.map (List.singleton << tabindex)) tabIndex
             )
             []
