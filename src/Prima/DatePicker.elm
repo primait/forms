@@ -1,4 +1,4 @@
-module Prima.DatePicker exposing (Model, Msg(..), init, selectedDate, update, view)
+module Prima.DatePicker exposing (init, Model, Msg(..), update, view, selectedDate)
 
 {-|
 
@@ -6,19 +6,11 @@ module Prima.DatePicker exposing (Model, Msg(..), init, selectedDate, update, vi
 
 -}
 
-import Date exposing (Date, Day(..), Month(..), day, dayOfWeek, month, year)
-import Date.Extra.Compare as DateCompare
-import Date.Extra.Config exposing (Config)
-import Date.Extra.Config.Config_en_gb exposing (config)
-import Date.Extra.Core exposing (daysInMonth, intToMonth, isoDayOfWeek, toFirstOfMonth)
-import Date.Extra.Create exposing (dateFromFields)
-import Date.Extra.Duration as Duration
-import Date.Extra.Field as Field
-import Date.Extra.Format as DateFormat
-import Date.Extra.Utils exposing (dayList)
+import Date exposing (Date)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
+import Time exposing (Month(..), Weekday(..), toDay, toMonth, toWeekday, toYear)
 
 
 {-| -}
@@ -48,33 +40,21 @@ selectedDate model =
 
 adjustInitialDate : Date -> ( Date, Date ) -> Date
 adjustInitialDate day ( low, high ) =
-    if DateCompare.is3 DateCompare.BetweenOpen day low high then
+    if Date.isBetween low high day then
         day
+
     else
         low
 
 
-dateFormatConfig : Config -> Config
-dateFormatConfig ({ i18n, format } as config) =
-    { config
-        | i18n =
-            { i18n
-                | dayShort = String.left 3 << formatDay
-                , dayName = formatDay
-                , monthShort = String.left 3 << formatMonth
-                , monthName = formatMonth
-            }
-    }
-
-
 formattedDay : Model -> String
-formattedDay model =
-    DateFormat.format (dateFormatConfig config) "%a, %b %-d" model.date
+formattedDay =
+    Date.format "EEEE, d MMMM" << .date
 
 
 formattedMonth : Model -> String
-formattedMonth model =
-    DateFormat.format (dateFormatConfig config) "%B %Y" <| model.date
+formattedMonth =
+    Date.format "MMMM y" << .date
 
 
 {-| -}
@@ -102,82 +82,96 @@ update msg model =
             { model | selectingYear = False }
 
         PrevMonth ->
-            updateSelectedMonth model (Duration.add Duration.Month -1 model.date)
+            shiftToPreviousMonth model
 
         NextMonth ->
-            updateSelectedMonth model (Duration.add Duration.Month 1 model.date)
+            shiftToNextMonth model
 
         SelectYear year ->
-            case Field.fieldToDate (Field.Year year) model.date of
-                Just date ->
-                    updateSelectedYear model date
-
-                Nothing ->
-                    model
+            updateSelectedYear year model
 
         SelectDay day ->
-            case Field.fieldToDate (Field.DayOfMonth day) model.date of
-                Just date ->
-                    updateSelectedDay model date
-
-                Nothing ->
-                    model
+            updateSelectedDay (Debug.log "day" day) model
 
 
-fromDateRangeToList : ( Date, Date ) -> List Date
-fromDateRangeToList ( high, low ) =
+
+-- fromDateRangeToList : ( Date, Date ) -> List Date
+-- fromDateRangeToList ( high, low ) =
+--     let
+--         diff =
+--             Duration.diffDays high (Duration.add Duration.Day 1 low)
+--     in
+--     dayList diff low
+
+
+updateSelectedYear : Int -> Model -> Model
+updateSelectedYear year model =
     let
-        diff =
-            Duration.diffDays high (Duration.add Duration.Day 1 low)
+        newDate : Date
+        newDate =
+            Date.fromCalendarDate year (Date.month model.date) (Date.day model.date)
     in
-    dayList diff low
+    updateModelIfValid ValidMonth newDate model
 
 
-updateSelectedYear : Model -> Date -> Model
-updateSelectedYear model day =
+shiftToPreviousMonth : Model -> Model
+shiftToPreviousMonth model =
     let
-        ( low, high ) =
+        newDate : Date
+        newDate =
+            Date.fromCalendarDate (Date.year model.date) (prevMonth <| Date.month model.date) (Date.day model.date)
+    in
+    updateModelIfValid ValidMonth newDate model
+
+
+shiftToNextMonth : Model -> Model
+shiftToNextMonth model =
+    let
+        ( newMonth, newYear ) =
+            nextMonth (Date.month model.date) (Date.year model.date)
+
+        newDate : Date
+        newDate =
+            Date.fromCalendarDate newYear newMonth (Date.day model.date)
+    in
+    updateModelIfValid ValidMonth newDate model
+
+
+updateSelectedDay : Int -> Model -> Model
+updateSelectedDay day model =
+    let
+        newDate : Date
+        newDate =
+            Date.fromCalendarDate (Date.year model.date) (Date.month model.date) day
+    in
+    updateModelIfValid ValidDay newDate model
+
+
+type ValidityCheck
+    = ValidDay
+    | ValidMonth
+
+
+updateModelIfValid : ValidityCheck -> Date -> Model -> Model
+updateModelIfValid validityCheck newDate model =
+    let
+        ( low_, high_ ) =
             model.daysPickerRange
 
-        year =
-            Date.year day
-
-        lowYear =
-            Date.year low
-
-        highYear =
-            Date.year high
-    in
-    if DateCompare.is3 DateCompare.BetweenOpen day low high then
-        { model | date = day, selectingYear = False }
-    else if lowYear <= year && year <= highYear then
-        { model | date = day, selectingYear = False }
-    else
-        { model | selectingYear = False }
-
-
-updateSelectedMonth : Model -> Date -> Model
-updateSelectedMonth model day =
-    let
         ( low, high ) =
-            model.daysPickerRange
-    in
-    if DateCompare.is3 DateCompare.BetweenOpen day low high then
-        { model | date = day }
-    else if DateCompare.is DateCompare.SameOrAfter day high then
-        { model | date = high }
-    else
-        { model | date = low }
+            case validityCheck of
+                ValidDay ->
+                    ( low_, high_ )
 
+                ValidMonth ->
+                    ( Date.fromCalendarDate (Date.year low_) (Date.month low_) 1, updateToLastDayOfMonth high_ )
 
-updateSelectedDay : Model -> Date -> Model
-updateSelectedDay model day =
-    let
-        ( low, high ) =
-            model.daysPickerRange
+        _ =
+            Debug.log "check" ( low, high, newDate )
     in
-    if DateCompare.is3 DateCompare.BetweenOpen day low high then
-        { model | date = day }
+    if Date.isBetween low high newDate then
+        { model | date = newDate }
+
     else
         model
 
@@ -190,6 +184,7 @@ view ({ selectingYear } as model) =
         [ header model
         , if selectingYear then
             yearPicker model
+
           else
             picker model
         ]
@@ -208,11 +203,12 @@ header ({ date, selectingYear } as model) =
             , onClick
                 (if selectingYear then
                     DaySelection
+
                  else
                     YearSelection
                 )
             ]
-            [ (text << toString << year) date
+            [ (text << String.fromInt << Date.year) date
             ]
         , div
             [ classList
@@ -241,20 +237,30 @@ weekDays =
 monthDays : Model -> Html Msg
 monthDays ({ date, daysPickerRange } as model) =
     let
+        currentYear : Int
         currentYear =
             Date.year date
 
+        currentMonth : Month
         currentMonth =
             Date.month date
 
         ( lowDate, highDate ) =
             daysPickerRange
 
+        daysCount : Int
         daysCount =
-            daysInMonth currentYear currentMonth
+            getDaysInMonth currentYear currentMonth
 
+        firstDayOfMonth : Date
+        firstDayOfMonth =
+            Date.fromCalendarDate (Date.year model.date) (Date.month model.date) 1
+
+        weekDay : Int
         weekDay =
-            (isoDayOfWeek << dayOfWeek << toFirstOfMonth) date
+            firstDayOfMonth
+                |> Date.weekday
+                |> Date.weekdayToNumber
 
         leftPadding =
             weekDay - 1
@@ -265,34 +271,37 @@ monthDays ({ date, daysPickerRange } as model) =
         weeks =
             chunks 7 (List.repeat leftPadding 0 ++ List.range 1 daysCount ++ List.repeat rightPadding 0)
 
+        firstOfMonth : Date
         firstOfMonth =
-            dateFromFields currentYear currentMonth 1 0 0 0 0
+            Date.fromCalendarDate (Date.year model.date) (Date.month model.date) 1
 
+        lastOfMonth : Date
         lastOfMonth =
-            dateFromFields currentYear currentMonth daysCount 0 0 0 0
+            Date.fromCalendarDate (Date.year model.date) (Date.month model.date) 31
 
         lowDayInMonth =
-            if DateCompare.is DateCompare.SameOrAfter lowDate firstOfMonth then
+            if Date.compare firstOfMonth lowDate == LT then
                 lowDate
+
             else
                 firstOfMonth
 
         highDayInMonth =
-            if DateCompare.is DateCompare.SameOrAfter highDate lastOfMonth then
-                lastOfMonth
-            else
+            if Date.compare highDate lastOfMonth == LT then
                 highDate
 
-        availableDays =
-            (List.map Date.day << List.reverse << fromDateRangeToList) ( lowDayInMonth, highDayInMonth )
+            else
+                lastOfMonth
 
-        disabledDaysInMonth =
-            (List.filter (not << flip List.member availableDays) << List.range 1) daysCount
+        -- availableDays =
+        --     (List.map toDay << List.reverse << fromDateRangeToList) ( lowDayInMonth, highDayInMonth )
+        -- disabledDaysInMonth =
+        --     (List.filter (not << (\a -> List.member a availableDays)) << List.range 1) daysCount
     in
     div
         [ class "a-datepicker__picker__monthDays"
         ]
-        (List.map (\week -> weekRow week (Date.day date) disabledDaysInMonth) weeks)
+        (List.map (\week -> weekRow week (Date.day date) []) weeks)
 
 
 weekRow : List Int -> Int -> List Int -> Html Msg
@@ -313,8 +322,9 @@ dayCell dayNumber currentDay disabled =
                 ]
             , (onClick << SelectDay) dayNumber
             ]
-            [ (text << toString) dayNumber
+            [ (text << String.fromInt) dayNumber
             ]
+
     else
         div
             [ class "a-datepicker__picker__days__item is-empty" ]
@@ -355,7 +365,7 @@ yearPicker ({ daysPickerRange } as model) =
             [ class "a-datepicker__yearPicker__scroller" ]
             [ div
                 [ class "a-datepicker__yearPicker__scroller__list" ]
-                (List.map (\y -> yearButton y (year model.date)) <| List.range (Date.year lowerBound) (Date.year upperBound))
+                (List.map (\y -> yearButton y (Date.year model.date)) <| List.range (Date.year lowerBound) (Date.year upperBound))
             ]
         ]
 
@@ -369,7 +379,7 @@ yearButton year currentYear =
             ]
         , (onClick << SelectYear) year
         ]
-        [ (text << toString) year
+        [ (text << String.fromInt) year
         ]
 
 
@@ -377,11 +387,12 @@ chunks : Int -> List a -> List (List a)
 chunks k xs =
     if List.length xs > k then
         List.take k xs :: chunks k (List.drop k xs)
+
     else
         [ xs ]
 
 
-formatDay : Day -> String
+formatDay : Weekday -> String
 formatDay day =
     case day of
         Mon ->
@@ -444,3 +455,137 @@ formatMonth month =
 
         Dec ->
             "Dicembre"
+
+
+nextMonth : Month -> Int -> ( Month, Int )
+nextMonth month year =
+    case month of
+        Jan ->
+            ( Feb, year )
+
+        Feb ->
+            ( Mar, year )
+
+        Mar ->
+            ( Apr, year )
+
+        Apr ->
+            ( May, year )
+
+        May ->
+            ( Jun, year )
+
+        Jun ->
+            ( Jul, year )
+
+        Jul ->
+            ( Aug, year )
+
+        Aug ->
+            ( Sep, year )
+
+        Sep ->
+            ( Oct, year )
+
+        Oct ->
+            ( Nov, year )
+
+        Nov ->
+            ( Dec, year )
+
+        Dec ->
+            ( Jan, year + 1 )
+
+
+prevMonth : Month -> Month
+prevMonth month =
+    case month of
+        Jan ->
+            Dec
+
+        Feb ->
+            Jan
+
+        Mar ->
+            Feb
+
+        Apr ->
+            Mar
+
+        May ->
+            Apr
+
+        Jun ->
+            May
+
+        Jul ->
+            Jun
+
+        Aug ->
+            Jul
+
+        Sep ->
+            Aug
+
+        Oct ->
+            Sep
+
+        Nov ->
+            Oct
+
+        Dec ->
+            Nov
+
+
+getDaysInMonth : Int -> Month -> Int
+getDaysInMonth year month =
+    case month of
+        Jan ->
+            31
+
+        Feb ->
+            if isLeapYear year then
+                28
+
+            else
+                29
+
+        Mar ->
+            31
+
+        Apr ->
+            30
+
+        May ->
+            31
+
+        Jun ->
+            30
+
+        Jul ->
+            31
+
+        Aug ->
+            31
+
+        Sep ->
+            30
+
+        Oct ->
+            31
+
+        Nov ->
+            30
+
+        Dec ->
+            31
+
+
+isLeapYear : Int -> Bool
+isLeapYear year =
+    remainderBy year 4 == 0 && (remainderBy year 100 /= 0 || remainderBy year 400 == 0)
+
+
+updateToLastDayOfMonth : Date -> Date
+updateToLastDayOfMonth date =
+    Date.fromCalendarDate (Date.year date) (Date.month date) (getDaysInMonth (Date.year date) (Date.month date))

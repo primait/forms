@@ -25,10 +25,12 @@ module App exposing
     , visitedCountriesConfig
     )
 
-import Date exposing (Date, Day(..), Month(..))
-import Date.Extra.Core exposing (intToMonth)
-import Date.Extra.Create exposing (dateFromFields)
-import Date.Format
+--import Date.Format
+--import Date.Extra.Core exposing (intToMonth)
+--import Date.Extra.Create exposing (dateFromFields)
+
+import Browser
+import Date exposing (Date)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -43,6 +45,7 @@ import Prima.Form as Form
         , SelectOption
         , Validation(..)
         )
+import Time exposing (Month(..), Weekday(..))
 
 
 
@@ -64,7 +67,7 @@ type alias Model =
     , city : Maybe String
     , isOpenCity : Bool
     , privacy : Bool
-    , dateOfBirth : Maybe String
+    , dateOfBirth : Maybe Date
     , dateOfBirthDP : DatePicker.Model
     , isVisibleDP : Bool
     , country : Maybe String
@@ -72,6 +75,10 @@ type alias Model =
     , isOpenCountry : Bool
     , visitedCountries : List ( Label, Slug, Bool )
     }
+
+
+type alias Flags =
+    {}
 
 
 type alias Label =
@@ -84,17 +91,17 @@ type alias Slug =
 
 initialDate : Date
 initialDate =
-    dateFromFields 2018 (intToMonth 5) 1 0 0 0 0
+    Date.fromCalendarDate 2018 May 1
 
 
 lowDate : Date
 lowDate =
-    dateFromFields 2018 (intToMonth 1) 1 0 0 0 0
+    Date.fromCalendarDate 2018 Feb 3
 
 
 highDate : Date
 highDate =
-    dateFromFields 2019 (intToMonth 12) 31 0 0 0 0
+    Date.fromCalendarDate 2019 Dec 29
 
 
 initialModel : Model
@@ -158,19 +165,21 @@ type Msg
 -------------------------------------------------------------------------------
 
 
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-    Html.program
+    Browser.element
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.batch []
+        , subscriptions = \_ -> Sub.none
         }
 
 
-init : ( Model, Cmd Msg )
-init =
-    initialModel ! []
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    ( initialModel
+    , Cmd.none
+    )
 
 
 
@@ -423,48 +432,55 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         UpdateField Username value ->
-            { model
+            ( { model
                 | username = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField Password value ->
-            { model
+            ( { model
                 | password = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField Note value ->
-            { model
+            ( { model
                 | note = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField Gender value ->
-            { model
+            ( { model
                 | gender = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField GenderVertical value ->
-            { model
+            ( { model
                 | genderVertical = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField City value ->
-            { model
+            ( { model
                 | city = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField Country value ->
-            { model
+            ( { model
                 | country = value
                 , countryFilter = Nothing
                 , isOpenCountry = False
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateField DateOfBirth value ->
             let
@@ -477,44 +493,48 @@ update msg model =
                         Nothing ->
                             Nothing
             in
-            { model
-                | dateOfBirth = value
+            ( { model
+                | dateOfBirth = Maybe.andThen (Result.toMaybe << Date.fromIsoString) value
                 , dateOfBirthDP =
-                    case (unwrap << Maybe.map (Result.toMaybe << Date.fromString)) value of
+                    case (unwrap << Maybe.map (Result.toMaybe << Date.fromIsoString)) value of
                         Just date ->
                             DatePicker.init date ( lowDate, highDate )
 
                         _ ->
                             model.dateOfBirthDP
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateFlag Privacy value ->
-            { model
+            ( { model
                 | privacy = value
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateDatePicker DateOfBirth dpMsg ->
             let
                 updatedInstance =
                     DatePicker.update dpMsg model.dateOfBirthDP
             in
-            { model
+            ( { model
                 | dateOfBirthDP = updatedInstance
-                , dateOfBirth = (Just << Date.Format.format "%d/%m/%Y" << DatePicker.selectedDate) updatedInstance
-            }
-                ! []
+                , dateOfBirth = Just (DatePicker.selectedDate updatedInstance)
+              }
+            , Cmd.none
+            )
 
         UpdateAutocomplete Country value ->
-            { model
+            ( { model
                 | countryFilter = value
                 , isOpenCountry = True
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         UpdateCheckbox VisitedCountries slug isChecked ->
-            { model
+            ( { model
                 | visitedCountries =
                     List.map
                         (\( optLabel, optSlug, optChecked ) ->
@@ -525,43 +545,54 @@ update msg model =
                                 ( optLabel, optSlug, optChecked )
                         )
                         model.visitedCountries
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         Toggle City isOpen ->
-            { model
+            ( { model
                 | isOpenCity = isOpen
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         ToggleDatePicker ->
-            { model
+            ( { model
                 | isVisibleDP = not model.isVisibleDP
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         Focus City ->
-            { model
+            ( { model
                 | isOpenCity = True
                 , isOpenCountry = False
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         Focus Country ->
-            { model
+            ( { model
                 | isOpenCountry = True
                 , isOpenCity = False
-            }
-                ! []
+              }
+            , Cmd.none
+            )
 
         Focus _ ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
         Blur _ ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
         _ ->
-            model ! []
+            ( model
+            , Cmd.none
+            )
 
 
 
