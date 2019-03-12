@@ -1,6 +1,6 @@
 {
     "type": "package",
-    "name": "primait/form",
+    "name": "primait/forms",
     "summary": "Form library in Elm",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
