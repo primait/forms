@@ -91,17 +91,21 @@ update msg model =
             updateSelectedYear year model
 
         SelectDay day ->
-            updateSelectedDay (Debug.log "day" day) model
+            updateSelectedDay day model
 
 
+fromDateRangeToList : List Date -> ( Date, Date ) -> List Date
+fromDateRangeToList dates ( low, high ) =
+    let
+        newDate : Date
+        newDate =
+            Date.fromCalendarDate (Date.year low) (Date.month low) (Date.day low + 1)
+    in
+    if Date.compare low high == EQ then
+        low :: dates
 
--- fromDateRangeToList : ( Date, Date ) -> List Date
--- fromDateRangeToList ( high, low ) =
---     let
---         diff =
---             Duration.diffDays high (Duration.add Duration.Day 1 low)
---     in
---     dayList diff low
+    else
+        fromDateRangeToList (low :: dates) ( newDate, high )
 
 
 updateSelectedYear : Int -> Model -> Model
@@ -165,9 +169,6 @@ updateModelIfValid validityCheck newDate model =
 
                 ValidMonth ->
                     ( Date.fromCalendarDate (Date.year low_) (Date.month low_) 1, updateToLastDayOfMonth high_ )
-
-        _ =
-            Debug.log "check" ( low, high, newDate )
     in
     if Date.isBetween low high newDate then
         { model | date = newDate }
@@ -293,15 +294,16 @@ monthDays ({ date, daysPickerRange } as model) =
             else
                 lastOfMonth
 
-        -- availableDays =
-        --     (List.map toDay << List.reverse << fromDateRangeToList) ( lowDayInMonth, highDayInMonth )
-        -- disabledDaysInMonth =
-        --     (List.filter (not << (\a -> List.member a availableDays)) << List.range 1) daysCount
+        availableDays =
+            (List.map Date.day << List.reverse << fromDateRangeToList []) ( lowDayInMonth, highDayInMonth )
+
+        disabledDaysInMonth =
+            (List.filter (not << (\a -> List.member a availableDays)) << List.range 1) daysCount
     in
     div
         [ class "a-datepicker__picker__monthDays"
         ]
-        (List.map (\week -> weekRow week (Date.day date) []) weeks)
+        (List.map (\week -> weekRow week (Date.day date) disabledDaysInMonth) weeks)
 
 
 weekRow : List Int -> Int -> List Int -> Html Msg

@@ -91,17 +91,17 @@ type alias Slug =
 
 initialDate : Date
 initialDate =
-    Date.fromCalendarDate 2018 May 1
+    Date.fromCalendarDate 2019 Feb 1
 
 
 lowDate : Date
 lowDate =
-    Date.fromCalendarDate 2018 Feb 3
+    Date.fromCalendarDate 2019 Jan 3
 
 
 highDate : Date
 highDate =
-    Date.fromCalendarDate 2019 Dec 29
+    Date.fromCalendarDate 2019 Apr 29
 
 
 initialModel : Model

@@ -3,7 +3,7 @@
     "name": "primait/elm-form",
     "summary": "Form library in Elm",
     "license": "BSD-3-Clause",
-    "version": "24.1.7",
+    "version": "1.0.0",
     "exposed-modules": [
         "Prima.Form",
         "Prima.DatePicker"
