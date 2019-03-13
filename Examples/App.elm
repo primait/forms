@@ -67,7 +67,7 @@ type alias Model =
     , city : Maybe String
     , isOpenCity : Bool
     , privacy : Bool
-    , dateOfBirth : Maybe Date
+    , dateOfBirth : Maybe String
     , dateOfBirthDP : DatePicker.Model
     , isVisibleDP : Bool
     , country : Maybe String
@@ -494,7 +494,7 @@ update msg model =
                             Nothing
             in
             ( { model
-                | dateOfBirth = Maybe.andThen (Result.toMaybe << Date.fromIsoString) value
+                | dateOfBirth = value
                 , dateOfBirthDP =
                     case (unwrap << Maybe.map (Result.toMaybe << Date.fromIsoString)) value of
                         Just date ->
@@ -520,7 +520,7 @@ update msg model =
             in
             ( { model
                 | dateOfBirthDP = updatedInstance
-                , dateOfBirth = Just (DatePicker.selectedDate updatedInstance)
+                , dateOfBirth = (Just << Date.format "dd/MM/y" << DatePicker.selectedDate) updatedInstance
               }
             , Cmd.none
             )

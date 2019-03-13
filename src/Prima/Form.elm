@@ -250,7 +250,7 @@ type alias DatepickerConfig model msg =
     { slug : String
     , label : Maybe String
     , attrs : List (Attribute msg)
-    , reader : model -> Maybe Date
+    , reader : model -> Maybe String
     , tagger : Maybe String -> msg
     , datePickerTagger : DatePicker.Msg -> msg
     , onFocus : msg
@@ -540,9 +540,25 @@ selectConfig slug label isDisabled isOpen placeholder attrs reader toggleTagger 
           ...
 
 -}
-datepickerConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe Date) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
+datepickerConfig : String -> Maybe String -> List (Attribute msg) -> (model -> Maybe String) -> (Maybe String -> msg) -> (DatePicker.Msg -> msg) -> msg -> msg -> DatePicker.Model -> Bool -> Bool -> Maybe Int -> List (Validation model) -> FormField model msg
 datepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker doForceShowError tabIndex validations =
-    FormField <| FormFieldDatepickerConfig (DatepickerConfig slug label attrs reader tagger datePickerTagger onFocus onBlur datepicker showDatePicker doForceShowError (Maybe.map ((*) 10) tabIndex)) validations
+    FormField <|
+        FormFieldDatepickerConfig
+            (DatepickerConfig
+                slug
+                label
+                attrs
+                reader
+                tagger
+                datePickerTagger
+                onFocus
+                onBlur
+                datepicker
+                showDatePicker
+                doForceShowError
+                (Maybe.map ((*) 10) tabIndex)
+            )
+            validations
 
 
 {-| Autocomplete configuration method.
@@ -1135,18 +1151,24 @@ renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, 
         pristine =
             isUntouched model (FormFieldDatepickerConfig config validations)
 
-        formatDateForText : Date -> String
-        formatDateForText =
-            Date.format "dd/MM/y"
+        inputTextFormat str =
+            (String.join "/"
+                << List.reverse
+                << String.split "-"
+            )
+                str
 
-        formatDateForInput : Date -> String
-        formatDateForInput =
-            Date.format "y-MM-dd"
+        inputDateFormat str =
+            (String.join "-"
+                << List.reverse
+                << String.split "/"
+            )
+                str
     in
     [ Html.input
         ([ type_ "text"
          , onInput (tagger << normalizeInput)
-         , (value << Maybe.withDefault "" << Maybe.map formatDateForText << reader) model
+         , (value << Maybe.withDefault "" << Maybe.map inputTextFormat << reader) model
          , onFocus config.onFocus
          , onBlur config.onBlur
          , id slug
@@ -1167,7 +1189,7 @@ renderDatepicker model ({ attrs, reader, tagger, datePickerTagger, slug, label, 
     , Html.input
         ([ attribute "type" "date"
          , onInput (tagger << normalizeInput)
-         , (value << Maybe.withDefault "" << Maybe.map formatDateForInput << reader) model
+         , (value << Maybe.withDefault "" << Maybe.map inputDateFormat << reader) model
          , onFocus config.onFocus
          , onBlur config.onBlur
          , id slug
