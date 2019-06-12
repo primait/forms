@@ -1376,7 +1376,7 @@ validateRule model config validation =
             (not << isEmpty << Maybe.withDefault "" << choiceReader) model
 
         ( NotEmpty _, FormFieldDatepickerConfig { reader } _ ) ->
-            (not << isJust << reader) model
+            ( isJust << reader) model
 
         ( NotEmpty _, FormFieldCheckboxConfig { reader } _ ) ->
             reader model
