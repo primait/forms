@@ -10,7 +10,7 @@ module Prima.Form exposing
     , isPristine
     )
 
-{-| Package to build a Form using [Prima Assicurazioni](https://www.prima.it)'s Design System.
+{-| Package to build a Form using Prima Assicurazioni's Design System.
 
 In order to keep the configuration as simple as possible we decided to not allow
 CSS classes to be changed, also forcing consistency in our ecosystem.
